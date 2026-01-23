@@ -1,0 +1,57 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+
+\usepackage{amsfonts, amsmath, amssymb}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{tikz, pgfplots}
+\usepackage{hyperref}
+\usepackage{tabulary, booktabs, tabularx, multirow}
+\usepackage{wrapfig}
+\usepackage{graphicx}
+
+\usepackage[backend=biber,style=numeric]{biblatex}
+\addbibresource{references.bib}
+
+\hypersetup{colorlinks,citecolor=black,filecolor=black,linkcolor=black,urlcolor=black}
+\usetikzlibrary{calc, math, trees, positioning, arrows, fit, shapes, shapes.multipart, backgrounds}
+\DeclareMathAlphabet{\doubleline}{U}{BOONDOX-ds}{m}{n}
+
+% colors
+\definecolor{lightgreen}{RGB}{54, 220, 75}
+\definecolor{lightred}{RGB}{255, 75, 65}
+\definecolor{lightblue}{RGB}{51, 153, 255}
+% \definecolor{lightorange}{RGB}{255, 149, 55}
+
+% \definecolor{lightgreen}{RGB}{44,161,45}
+% \definecolor{lightred}{RGB}{214,39,40}
+% \definecolor{lightblue}{RGB}{30,118,180}
+\definecolor{lightorange}{RGB}{254,127,15}
+
+
+\newcommand{\mat}[1]{\left(\begin{matrix*} #1 \end{matrix*}\right)}
+\newcommand{\deter}[1]{\left|\begin{matrix*} #1 \end{matrix*}\right|}
+\newcommand{\set}[1]{\left\{ #1 \right\}}
+\newcommand{\gaussian}[2]{\left(\begin{array}{#1} #2 \end{array}\right)}
+\newcommand{\Span}[1]{\left\langle #1 \right\rangle}
+\newcommand{\inner}[1]{\left\langle #1 \right\rangle}
+\newcommand{\expected}[2]{\mathbb{E}_{#2} \left[ #1 \right]}
+\newcommand{\variables}[1]{\makebox[0cm][r]{\begin{tabular}{rl}#1\end{tabular}}}
+
+
+\begin{document}
+
+\input{content/title.tex}
+\tableofcontents
+
+
+
+\clearpage
+\input{content/datasets.tex}
+
+
+
+\end{document}
