@@ -158,7 +158,7 @@ def filter_silence(raw: list, annotation: np.ndarray) -> np.ndarray:
         Filtered beat timestamps with silence sections removed
     """
     beat = estimate_ibi(annotation)
-    window = 2 * beat
+    window = 0.75 * beat
     raw_stacked = np.hstack(raw)
     
     result = []
@@ -195,6 +195,7 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     plot(stacked, result)
     result = fill_missing_beats(result, end)
     result = filter_silence(raw_annotations, result)
+    result = np.maximum(result, 0)
 
     interpolated = length / len(result)
     print(f"interpolated: {(1 - interpolated) * 100:.2f}%")
@@ -241,7 +242,7 @@ def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, be
         bar = (total_beats // beats_in_bar) + 1
         beat_in_bar = (total_beats % beats_in_bar) + 1
         labels.append(f"{bar}.{beat_in_bar}")
-    
+
     df = pd.DataFrame({'TIME': annotation, 'LABEL': labels})
     annotation_filename = os.path.join(dataset_path, f'annotation{next_num}.txt')
     df.to_csv(annotation_filename, index=False)
