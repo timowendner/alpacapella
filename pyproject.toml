@@ -17,9 +17,12 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
+    "pandas",
+    "matplotlib",
     "librosa",
     "soundfile",
-    "pandas",
+    "numba",
+    "llvmlite==0.44.0",
 ]
 
 [project.urls]
