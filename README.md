@@ -6,7 +6,7 @@ For the installation we first need a working distribution of python. This packag
 ```bash
 !pip install git+https://github.com/timowendner/alpacapella
 ```
-Then the whole functionality can be used with the import:
+Then the whole functionality can be imported:
 ```python
 import alpacapella
 ```
@@ -30,6 +30,8 @@ alpacapella.play(audio_path, annotation)
 If the annotations are correct, they can be saved with `alpacapella.write_dataset`. The `audio_path`, `dataset_path` and `annotation` must be provided. With `beats_in_bar` it can be specified how many beats are in a bar (most common for rap is 4 or 8). The `cutoff` is the time in seconds after the last annotation, where the audio is cut off.
 ```py
 dataset_path = "examples/dataset"
-alpacapella.write_dataset(audio_path, dataset_path, annotation, beats_in_bar=4, cutoff=2)
+alpacapella.write_dataset(
+    audio_path, dataset_path, annotation, beats_in_bar=4, cutoff=2
+)
 ```
 
