@@ -236,16 +236,12 @@ def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, be
     next_num = len(existing_files) + 1
     
     ibi = estimate_ibi(annotation)
-    labels = []
-    for t in annotation:
-        total_beats = int(round(t / ibi))
-        bar = (total_beats // beats_in_bar) + 1
-        beat_in_bar = (total_beats % beats_in_bar) + 1
-        labels.append(f"{bar}.{beat_in_bar}")
-
-    df = pd.DataFrame({'TIME': annotation, 'LABEL': labels})
-    annotation_filename = os.path.join(dataset_path, f'annotation{next_num}.txt')
-    df.to_csv(annotation_filename, index=False)
+    annotation_filename = os.path.join(dataset_path, f'annotation{next_num}.beats')
+    with open(annotation_filename, 'w') as f:
+        for t in annotation:
+            total_beats = int(round(t / ibi))
+            beat_in_bar = (total_beats % beats_in_bar) + 1
+            f.write(f"{t:.9f} {beat_in_bar}\n")
 
     audio_filename = os.path.join(dataset_path, f'audio{next_num}.wav')
     sf.write(audio_filename, y, sr)
