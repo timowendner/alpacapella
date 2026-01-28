@@ -23,6 +23,8 @@ dependencies = [
     "soundfile",
     "numba",
     "llvmlite==0.44.0",
+    "madmom @ git+https://github.com/CPJKU/madmom.git",
+    "beat-this @ git+https://github.com/CPJKU/beat_this.git@main",
 ]
 
 [project.urls]
