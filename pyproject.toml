@@ -16,15 +16,16 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy",
+    "numpy<2",
     "pandas",
     "matplotlib",
     "librosa",
     "soundfile",
     "numba",
     "llvmlite==0.44.0",
-    "madmom @ git+https://github.com/CPJKU/madmom.git",
-    "beat-this @ git+https://github.com/CPJKU/beat_this.git@main",
+    "madmom",
+    "beat-this",
+    "mir_eval",
 ]
 
 [project.urls]

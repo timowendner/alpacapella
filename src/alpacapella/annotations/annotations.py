@@ -7,9 +7,9 @@ then creates a unified dataset for beat tracking models.
 import os
 import numpy as np
 import librosa
-import pandas as pd
 import soundfile as sf
-import matplotlib.pyplot as plt
+
+from .utils import load_folder, plot
 
 def estimate_ibi(annotation: np.ndarray) -> float:
     """Estimate inter-beat interval using median of valid intervals.
@@ -61,26 +61,6 @@ def fill_missing_beats(annotation: np.ndarray, end: float = 0) -> np.ndarray:
     return np.array(result)
 
 
-def load_annotations(annotation_path: str) -> list[np.ndarray]:
-    """Load all annotation files from directory.
-    
-    Expects CSV files with 'TIME' column containing beat timestamps.
-
-    Args:
-        annotation_path: Directory containing .txt annotation files
-    Returns:
-        List of beat timestamp arrays, one per file
-    """
-    annotations = []
-    for file in sorted(os.listdir(annotation_path)):
-        if not file.endswith('.txt'):
-            continue
-        file_path = os.path.join(annotation_path, file)
-        df = pd.read_csv(file_path)
-        annotation = np.array(df['TIME'].values)
-        annotations.append(annotation)
-    return annotations
-
 def combine_annotations(annotations: list, voting_window: float = 0.05) -> tuple[np.ndarray, int]:
     """Merge annotations by keeping beats where all annotators agree.
     
@@ -128,24 +108,6 @@ def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.nda
         result.append(np.mean(candidates))
     return np.array(result)
 
-def play(audio_path: str, click: np.ndarray):
-    """Play audio with beat click overlay in Jupyter notebook.
-    
-    Requires IPython environment. Will not work in standard Python scripts.
-
-    Args:
-        audio_path: Path to audio file
-        click: Beat timestamps in seconds for click track overlay
-    """
-    try:
-        from IPython.display import Audio, display
-    except ImportError:
-        raise RuntimeError("play() requires IPython (use in Jupyter notebook)")
-    
-    y, sr = librosa.load(audio_path, sr=None)
-    clicks = librosa.clicks(times=click, sr=sr, length=len(y), click_freq=1000)
-    display(Audio(y + clicks, rate=sr))
-
 def filter_silence(raw: list, annotation: np.ndarray) -> np.ndarray:
     """Remove beats from silent sections where no annotator marked beats.
     
@@ -181,7 +143,7 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     Returns:
         Final merged and processed beat timestamps
     """
-    raw_annotations = load_annotations(annotation_path)
+    raw_annotations = load_folder(annotation_path)
     annotations = []
     for annotation in raw_annotations:
         annotation = fill_missing_beats(annotation)
@@ -201,20 +163,6 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     print(f"interpolated: {(1 - interpolated) * 100:.2f}%")
     print(f"bpm: {60 / np.mean(np.diff(result)):.2f}")
     return result
-
-def plot(raw: np.ndarray, final: np.ndarray):
-    """Visualize raw and final beat annotations.
-    
-    Blue lines: all input beats, Red lines: final merged beats.
-
-    Args:
-        raw: Combined timestamps from all raw annotations
-        final: Final processed beat timestamps
-    """
-    plt.figure(figsize=(10, 2))
-    plt.vlines(x=raw, ymin=0, ymax=1, linewidth=0.4)
-    plt.vlines(x=final, ymin=0, ymax=1, linewidth=0.4, colors='red')
-    plt.show()
 
 def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, beats_in_bar: int = 4, cutoff: float = 2.0):
     """Save audio and annotation to dataset with automatic numbering.
