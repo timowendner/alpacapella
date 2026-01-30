@@ -61,7 +61,7 @@ def fill_missing_beats(annotation: np.ndarray, end: float = 0) -> np.ndarray:
     return np.array(result)
 
 
-def combine_annotations(annotations: list, voting_window: float = 0.05) -> tuple[np.ndarray, int]:
+def combine_annotations(annotations: list, voting_window: float = 0.05) -> np.ndarray:
     """Merge annotations by keeping beats where all annotators agree.
     
     Beats are considered the same if within voting_window seconds.
@@ -71,7 +71,7 @@ def combine_annotations(annotations: list, voting_window: float = 0.05) -> tuple
         annotations: List of beat timestamp arrays from different annotators
         voting_window: Max time difference to consider beats identical (typically 0.03-0.1)
     Returns:
-        Tuple of (merged beat timestamps, latest timestamp from any annotation)
+        merged beat timestamps
     """
     n = len(annotations)
     stacked = np.sort(np.hstack(annotations))
@@ -83,8 +83,7 @@ def combine_annotations(annotations: list, voting_window: float = 0.05) -> tuple
             continue
         if candidate - value < voting_window:
             result.append(mean)
-    result = np.array(result)
-    return result, max(stacked)
+    return np.array(result)
 
 def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.ndarray:
     """Smooth beat positions using local tempo-adjusted averaging.
@@ -108,29 +107,28 @@ def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.nda
         result.append(np.mean(candidates))
     return np.array(result)
 
-def filter_silence(raw: list, annotation: np.ndarray) -> np.ndarray:
+def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
     """Remove beats from silent sections where no annotator marked beats.
     
     Keeps beats only if any raw annotation exists within 2 inter-beat intervals.
 
     Args:
-        raw: List of original (unprocessed) annotation arrays
+        raw: stacked (unprocessed) annotation arrays
         annotation: Processed beat timestamps to filter
     Returns:
         Filtered beat timestamps with silence sections removed
     """
     beat = estimate_ibi(annotation)
     window = 0.75 * beat
-    raw_stacked = np.hstack(raw)
     
     result = []
     for value in annotation:
-        distances = np.abs(raw_stacked - value)
+        distances = np.abs(raw - value)
         if np.any(distances < window):
             result.append(value)
     return np.array(result)
 
-def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05) -> np.ndarray:
+def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05) -> tuple[np.ndarray, float]:
     """Complete processing pipeline from raw annotations to final merged output.
     
     Steps: load -> fill gaps -> smooth -> vote -> smooth again -> fill -> filter silence
@@ -141,28 +139,31 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
         smoothing_size: Smoothing window in multiples of IBI (default 2.2)
         voting_window: Agreement threshold in seconds (default 0.05)
     Returns:
-        Final merged and processed beat timestamps
+        Final merged and processed beat timestamps,
+        percentage of real annotations (without interpolations)
     """
     raw_annotations = load_folder(annotation_path)
+    stacked = np.sort(np.hstack(annotations))
     annotations = []
     for annotation in raw_annotations:
         annotation = fill_missing_beats(annotation)
         annotation = apply_smoothing(annotation, smoothing_size)
+        annotation = filter_silence(stacked, annotation)
         annotations.append(annotation)
 
-    result, end = combine_annotations(annotations, voting_window)
-    result = apply_smoothing(result, smoothing_size)
+    # combine annotations
+    result = combine_annotations(annotations, voting_window)
     length = len(result)
-    stacked = np.sort(np.hstack(annotations))
-    plot(stacked, result)
-    result = fill_missing_beats(result, end)
-    result = filter_silence(raw_annotations, result)
+    result = fill_missing_beats(result, max(stacked))
+    result = apply_smoothing(result, smoothing_size)
+    result = filter_silence(stacked, result)
     result = np.maximum(result, 0)
 
-    interpolated = length / len(result)
-    print(f"interpolated: {(1 - interpolated) * 100:.2f}%")
+    plot(stacked, result)
+    real = length / len(result)
+    print(f"interpolated: {(1 - real) * 100:.2f}%")
     print(f"bpm: {60 / np.mean(np.diff(result)):.2f}")
-    return result
+    return result, real
 
 def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, beats_in_bar: int = 4, cutoff: float = 2.0):
     """Save audio and annotation to dataset with automatic numbering.
@@ -193,3 +194,26 @@ def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, be
 
     audio_filename = os.path.join(dataset_path, f'audio{next_num}.wav')
     sf.write(audio_filename, y, sr)
+
+
+def create_dataset(
+        dataset_path: str, annotation_path: str, 
+        smoothing_size: float = 2.2, voting_window: float = 0.05, 
+        cutoff: float = 2.0, beats_in_bar: int = 4
+    ):
+    os.makedirs(dataset_path, exist_ok=True)
+    for subfolder in os.listdir(annotation_path):
+        subfolder_path = os.path.join(annotation_path, subfolder)
+        if not os.path.isdir(subfolder_path):
+            continue
+        
+        wav_files = [f for f in os.listdir(subfolder_path) if f.endswith('.wav')]
+        
+        if not wav_files:
+            print(f"No .wav file in {subfolder}, skipping")
+            continue
+        
+        audio_file = os.path.join(subfolder_path, wav_files[0])
+        
+        annotation, real = pipeline(subfolder_path, smoothing_size, voting_window)
+        write_dataset(audio_file, dataset_path, annotation, beats_in_bar, cutoff)

@@ -27,7 +27,7 @@ def load_folder(annotation_path: str) -> list[np.ndarray]:
     """
     annotations = []
     for file in sorted(os.listdir(annotation_path)):
-        if not file.endswith('.txt'):
+        if not file.endswith('.txt') or file.endswith('.beats'):
             continue
         file_path = os.path.join(annotation_path, file)
         annotation = load(file_path)[:, 0]
