@@ -131,7 +131,7 @@ def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
 def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05) -> tuple[np.ndarray, float]:
     """Complete processing pipeline from raw annotations to final merged output.
     
-    Steps: load -> fill gaps -> smooth -> vote -> smooth again -> fill -> filter silence
+    Steps: load -> fill gaps -> smooth -> vote -> smooth again -> fill -> predict downbeats -> filter silence
     Displays plot and prints statistics (interpolation %, BPM).
 
     Args:
@@ -139,11 +139,11 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
         smoothing_size: Smoothing window in multiples of IBI (default 2.2)
         voting_window: Agreement threshold in seconds (default 0.05)
     Returns:
-        Final merged and processed beat timestamps,
+        Final merged and processed beat timestamps with downbeat positions,
         percentage of real annotations (without interpolations)
     """
     raw_annotations = load_folder(annotation_path)
-    stacked = np.sort(np.hstack(annotations))
+    stacked = np.sort(np.hstack(raw_annotations))
     annotations = []
     for annotation in raw_annotations:
         annotation = fill_missing_beats(annotation)
@@ -151,21 +151,31 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
         annotation = filter_silence(stacked, annotation)
         annotations.append(annotation)
 
-    # combine annotations
     result = combine_annotations(annotations, voting_window)
     length = len(result)
     result = fill_missing_beats(result, max(stacked))
     result = apply_smoothing(result, smoothing_size)
-    result = filter_silence(stacked, result)
+    
+    ibi = estimate_ibi(result)
+    bpm = 60 / ibi
+    beats_in_bar = 4 if bpm < 110 else 8
+    
+    first_beat_index = int(round(result[0] / ibi))
+    beat_positions = ((first_beat_index + np.arange(len(result))) % beats_in_bar) + 1
+    
+    filtered_result = filter_silence(stacked, result)
+    mask = np.isin(result, filtered_result)
+    result = result[mask]
+    beat_positions = beat_positions[mask]
     result = np.maximum(result, 0)
+    result = np.column_stack([result, beat_positions])
 
-    plot(stacked, result)
-    real = length / len(result)
-    print(f"interpolated: {(1 - real) * 100:.2f}%")
-    print(f"bpm: {60 / np.mean(np.diff(result)):.2f}")
+    real = length / result.shape[0]
+    title = f"interpolated: {(1 - real) * 100:.2f}%, bpm: {bpm:.2f}"
+    plot(stacked, result, title=title)
     return result, real
 
-def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, beats_in_bar: int = 4, cutoff: float = 2.0):
+def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, cutoff: float = 2.0):
     """Save audio and annotation to dataset with automatic numbering.
     
     Creates files: audioN.wav and annotationN.txt where N auto-increments.
@@ -173,24 +183,20 @@ def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, be
     Args:
         audio_path: Path to source audio file
         dataset_path: Directory to save dataset files
-        annotation: Beat timestamps in seconds
-        beats_in_bar: beats in a Bar. Normal is 4/4.
+        annotation: 2D array with timestamps and beat positions
         cutoff: Seconds of audio to keep after last beat (default 2.0)
     """
     y, sr = librosa.load(audio_path, sr=None)
-    end = annotation[-1]
+    end = annotation[-1, 0]
     y = y[:int((end + cutoff)*sr)]
     
     existing_files = [f for f in os.listdir(dataset_path) if f.startswith('audio')]
     next_num = len(existing_files) + 1
     
-    ibi = estimate_ibi(annotation)
     annotation_filename = os.path.join(dataset_path, f'annotation{next_num}.beats')
     with open(annotation_filename, 'w') as f:
-        for t in annotation:
-            total_beats = int(round(t / ibi))
-            beat_in_bar = (total_beats % beats_in_bar) + 1
-            f.write(f"{t:.9f} {beat_in_bar}\n")
+        for t, beat_pos in annotation:
+            f.write(f"{t:.9f} {int(beat_pos)}\n")
 
     audio_filename = os.path.join(dataset_path, f'audio{next_num}.wav')
     sf.write(audio_filename, y, sr)

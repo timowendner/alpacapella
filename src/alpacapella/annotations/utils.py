@@ -35,28 +35,36 @@ def load_folder(annotation_path: str) -> list[np.ndarray]:
     return annotations
 
 
-def plot(raw: np.ndarray, final: np.ndarray):
+def plot(raw: np.ndarray, annotation: np.ndarray, title: str):
     """Visualize raw and final beat annotations.
     
-    Blue lines: all input beats, Red lines: final merged beats.
+    Blue lines: all input beats, Red lines: downbeats, Orange lines: other beats.
 
     Args:
         raw: Combined timestamps from all raw annotations
-        final: Final processed beat timestamps
+        annotation: 2D array with timestamps and beat positions
+        title: the title of the plot
     """
     plt.figure(figsize=(10, 2))
     plt.vlines(x=raw, ymin=0, ymax=1, linewidth=0.4)
-    plt.vlines(x=final, ymin=0, ymax=1, linewidth=0.4, colors='red')
+    
+    downbeats = annotation[annotation[:, 1] == 1, 0]
+    other_beats = annotation[annotation[:, 1] != 1, 0]
+    
+    plt.vlines(x=downbeats, ymin=0, ymax=1, linewidth=0.4, colors='red')
+    plt.vlines(x=other_beats, ymin=0, ymax=1, linewidth=0.4, colors='orange')
+    plt.title(title)
+    plt.yticks([])
     plt.show()
 
-def play(audio_path: str, click: np.ndarray):
+def play(audio_path: str, annotation: np.ndarray):
     """Play audio with beat click overlay in Jupyter notebook.
     
     Requires IPython environment. Will not work in standard Python scripts.
 
     Args:
         audio_path: Path to audio file
-        click: Beat timestamps in seconds for click track overlay
+        annotation: 2D array with timestamps and beat positions
     """
     try:
         from IPython.display import Audio, display
@@ -64,8 +72,14 @@ def play(audio_path: str, click: np.ndarray):
         raise RuntimeError("play() requires IPython (use in Jupyter notebook)")
     
     y, sr = librosa.load(audio_path, sr=None)
-    clicks = librosa.clicks(times=click, sr=sr, length=len(y), click_freq=1000)
-    display(Audio(y + clicks, rate=sr))
+    
+    downbeats = annotation[annotation[:, 1] == 1, 0]
+    other_beats = annotation[annotation[:, 1] != 1, 0]
+    
+    downbeat_clicks = librosa.clicks(times=downbeats, sr=sr, length=len(y), click_freq=1000)
+    other_clicks = librosa.clicks(times=other_beats, sr=sr, length=len(y), click_freq=800)
+    
+    display(Audio(y + downbeat_clicks + other_clicks, rate=sr))
 
 
 def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[float]:
