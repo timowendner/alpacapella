@@ -1,1 +1,1 @@
-from .beat_this import evaluate
+from .beat_this import evaluate, predict
