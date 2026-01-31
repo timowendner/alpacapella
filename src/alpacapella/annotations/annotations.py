@@ -175,10 +175,8 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     plot(stacked, result, title=title)
     return result, real
 
-def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, cutoff: float = 2.0):
-    """Save audio and annotation to dataset with automatic numbering.
-    
-    Creates files: audioN.wav and annotationN.txt where N auto-increments.
+def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, file_name: str, cutoff: float = 2.0):
+    """Save audio and annotation to dataset.
 
     Args:
         audio_path: Path to source audio file
@@ -190,36 +188,41 @@ def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, cu
     end = annotation[-1, 0]
     y = y[:int((end + cutoff)*sr)]
     
-    existing_files = [f for f in os.listdir(dataset_path) if f.startswith('audio')]
-    next_num = len(existing_files) + 1
-    
-    annotation_filename = os.path.join(dataset_path, f'annotation{next_num}.beats')
+    annotation_filename = os.path.join(dataset_path, f'{file_name}.beats')
     with open(annotation_filename, 'w') as f:
         for t, beat_pos in annotation:
             f.write(f"{t:.9f} {int(beat_pos)}\n")
 
-    audio_filename = os.path.join(dataset_path, f'audio{next_num}.wav')
+    audio_filename = os.path.join(dataset_path, f'{file_name}.wav')
     sf.write(audio_filename, y, sr)
 
 
 def create_dataset(
         dataset_path: str, annotation_path: str, 
         smoothing_size: float = 2.2, voting_window: float = 0.05, 
-        cutoff: float = 2.0, beats_in_bar: int = 4
+        cutoff: float = 2.0, threshold: float = 0.4
     ):
+    i = 1
     os.makedirs(dataset_path, exist_ok=True)
     for subfolder in os.listdir(annotation_path):
         subfolder_path = os.path.join(annotation_path, subfolder)
         if not os.path.isdir(subfolder_path):
             continue
         
-        wav_files = [f for f in os.listdir(subfolder_path) if f.endswith('.wav')]
+        files = [f for f in os.listdir(subfolder_path) if f.endswith(('.wav', '.mp3'))]
         
-        if not wav_files:
+        if not files:
             print(f"No .wav file in {subfolder}, skipping")
             continue
         
-        audio_file = os.path.join(subfolder_path, wav_files[0])
+        audio_file = os.path.join(subfolder_path, files[0])
         
-        annotation, real = pipeline(subfolder_path, smoothing_size, voting_window)
-        write_dataset(audio_file, dataset_path, annotation, beats_in_bar, cutoff)
+        try:
+            annotation, real = pipeline(subfolder_path, smoothing_size, voting_window)
+        except:
+            annotation, real = None, 0
+        if real < threshold:
+            continue
+        name = f"lm{i}"
+        write_dataset(audio_file, dataset_path, annotation, name, cutoff)
+        i += 1
