@@ -45,7 +45,7 @@ def load_folder(annotation_path: str) -> list[np.ndarray]:
     return annotations
 
 
-def plot(raw: np.ndarray, annotation: np.ndarray, title: str):
+def plot(raw: np.ndarray, annotation: np.ndarray, title: str, window_ms: int = 40):
     """Visualize raw and final beat annotations.
     
     Blue lines: all input beats, Red lines: downbeats, Orange lines: other beats.
@@ -55,16 +55,27 @@ def plot(raw: np.ndarray, annotation: np.ndarray, title: str):
         annotation: 2D array with timestamps and beat positions
         title: the title of the plot
     """
-    plt.figure(figsize=(10, 2))
-    plt.vlines(x=raw, ymin=0, ymax=1, linewidth=0.4)
+    window_s = window_ms / 1000.0
+    half_window = window_s / 2.0
+    fig, ax = plt.subplots(figsize=(12, 3))
     
-    downbeats = annotation[annotation[:, 1] == 1, 0]
-    other_beats = annotation[annotation[:, 1] != 1, 0]
+    for i, beat in enumerate(annotation[:, 0]):
+        if i == 0:
+            ax.axvspan(beat - half_window, beat + half_window, color='gray', alpha=0.3, label=f'{window_ms}ms Window')
+        else:
+            ax.axvspan(beat - half_window, beat + half_window, color='gray', alpha=0.3)
+            
+    ax.vlines(raw, 0.1, 0.45, colors='blue', label='Raw')
+    ax.vlines(annotation[:, 0], 0.55, 0.9, colors='orange', label='Final')
     
-    plt.vlines(x=downbeats, ymin=0, ymax=1, linewidth=0.4, colors='red')
-    plt.vlines(x=other_beats, ymin=0, ymax=1, linewidth=0.4, colors='orange')
-    plt.title(title)
-    plt.yticks([])
+    ax.set_yticks([1, 2])
+    ax.set_yticklabels(['Raw', 'Final'])
+    ax.set_xlabel('Time (seconds)')
+    ax.set_title(title)
+    ax.set_ylim(0, 1)
+    ax.grid(axis='x', linestyle='--', alpha=0.5)
+    ax.legend()
+    plt.tight_layout()
     plt.show()
 
 def play(audio_path: str, annotation: np.ndarray):
@@ -95,7 +106,7 @@ def play(audio_path: str, annotation: np.ndarray):
 def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[float]:
     if isinstance(target, str):
         target = load(target)
-    gt_beats = target[:, 0] + 0.04
+    gt_beats = target[:, 0]
     gt_downbeats = target[target[:, 1] == 1, 0]
     
     beats_fscore = mir_eval.beat.f_measure(
