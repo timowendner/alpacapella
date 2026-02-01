@@ -16,6 +16,16 @@ def load(annotation_path: str) -> tuple[np.ndarray]:
     annotation = np.loadtxt(annotation_path)
     return annotation
 
+def save(annotation: np.ndarray, annotation_path: str):
+    """Save an annotation array to a file.
+
+    Args:
+        annotation: Beat timestamp and downbeat array
+        annotation_path: Path where the file will be saved
+    """
+    np.savetxt(annotation_path, annotation, fmt=['%.9f', '%d'])
+    
+
 
 def load_folder(annotation_path: str) -> list[np.ndarray]:
     """Load all annotation files from directory.
@@ -85,7 +95,7 @@ def play(audio_path: str, annotation: np.ndarray):
 def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[float]:
     if isinstance(target, str):
         target = load(target)
-    gt_beats = target[:, 0]
+    gt_beats = target[:, 0] + 0.04
     gt_downbeats = target[target[:, 1] == 1, 0]
     
     beats_fscore = mir_eval.beat.f_measure(
