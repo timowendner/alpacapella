@@ -2,16 +2,21 @@ import numpy as np
 from madmom.features.downbeats import RNNDownBeatProcessor, DBNDownBeatTrackingProcessor
 from .. import annotations
 
-def evaluate(audio_file, annotation: str | np.ndarray):
+def predict(audio_path: str):
     rnn_processor = RNNDownBeatProcessor()
     dbn_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[4, 8], fps=100)
-    
-    activations = rnn_processor(audio_file)
+
+    activations = rnn_processor(audio_path)
     beat_downbeat_positions = dbn_processor(activations)
-    
+
     beats = beat_downbeat_positions[:, 0]
     downbeats_mask = beat_downbeat_positions[:, 1] == 1
     downbeats = beat_downbeat_positions[downbeats_mask, 0]
+
+    return beats, downbeats
+
+def evaluate(audio_path, annotation: str | np.ndarray):
+    beats, downbeats = predict(audio_path)
 
     beats_fscore, downbeats_fscore = annotations.evaluate(
         beats, downbeats, annotation

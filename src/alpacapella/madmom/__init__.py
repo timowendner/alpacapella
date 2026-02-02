@@ -1,1 +1,1 @@
-from .madmom import evaluate
+from .madmom import evaluate, predict
