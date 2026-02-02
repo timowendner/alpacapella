@@ -9,7 +9,7 @@ import numpy as np
 import librosa
 import soundfile as sf
 
-from .utils import load_folder, plot
+from .utils import load_folder, plot, save
 
 def estimate_ibi(annotation: np.ndarray) -> float:
     """Estimate inter-beat interval using median of valid intervals.
@@ -128,7 +128,7 @@ def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
             result.append(value)
     return np.array(result)
 
-def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05) -> tuple[np.ndarray, float]:
+def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05, is_plot: bool = True) -> tuple[np.ndarray, float]:
     """Complete processing pipeline from raw annotations to final merged output.
     
     Steps: load -> fill gaps -> smooth -> vote -> smooth again -> fill -> predict downbeats -> filter silence
@@ -171,8 +171,9 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     result = np.column_stack([result, beat_positions])
 
     real = length / result.shape[0]
-    title = f"interpolated: {(1 - real) * 100:.2f}%, bpm: {bpm:.2f}"
-    plot(stacked, result, title=title)
+    title = f"real: {real * 100:.2f}%, bpm: {bpm:.2f}"
+    if is_plot:
+        plot(stacked, result, title=title)
     return result, real
 
 def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, file_name: str, cutoff: float = 2.0):
@@ -188,23 +189,22 @@ def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, fi
     end = annotation[-1, 0]
     y = y[:int((end + cutoff)*sr)]
     
-    annotation_filename = os.path.join(dataset_path, f'{file_name}.beats')
-    with open(annotation_filename, 'w') as f:
-        for t, beat_pos in annotation:
-            f.write(f"{t:.9f} {int(beat_pos)}\n")
+    annotation_path = os.path.join(dataset_path, f'{file_name}.beats')
+    save(annotation, annotation_path)
 
     audio_filename = os.path.join(dataset_path, f'{file_name}.wav')
     sf.write(audio_filename, y, sr)
 
 
 def create_dataset(
-        dataset_path: str, annotation_path: str, 
+        dataset_path: str, annotation_path: str,
         smoothing_size: float = 2.2, voting_window: float = 0.05, 
         cutoff: float = 2.0, threshold: float = 0.4
     ):
-    i = 1
     os.makedirs(dataset_path, exist_ok=True)
-    for subfolder in os.listdir(annotation_path):
+    folders = os.listdir(annotation_path)
+    folders.sort(key=lambda x: (len(x), x))
+    for subfolder in folders:
         subfolder_path = os.path.join(annotation_path, subfolder)
         if not os.path.isdir(subfolder_path):
             continue
@@ -212,7 +212,6 @@ def create_dataset(
         files = [f for f in os.listdir(subfolder_path) if f.endswith(('.wav', '.mp3'))]
         
         if not files:
-            print(f"No .wav file in {subfolder}, skipping")
             continue
         
         audio_file = os.path.join(subfolder_path, files[0])
@@ -223,6 +222,6 @@ def create_dataset(
             annotation, real = None, 0
         if real < threshold:
             continue
-        name = f"lm{i}"
+        dataset_name = os.path.basename(os.path.normpath(dataset_path))
+        name = f"{dataset_name}{subfolder}"
         write_dataset(audio_file, dataset_path, annotation, name, cutoff)
-        i += 1
