@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import librosa
 import mir_eval
 
-
 def load(annotation_path: str) -> tuple[np.ndarray]:
     """Load an annotation file.
 

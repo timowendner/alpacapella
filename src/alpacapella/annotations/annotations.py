@@ -10,22 +10,7 @@ import librosa
 import soundfile as sf
 
 from .utils import load_folder, plot, save
-
-def estimate_ibi(annotation: np.ndarray) -> float:
-    """Estimate inter-beat interval using median of valid intervals.
-    
-    Filters intervals between 0.3-1.0 seconds (60-200 BPM range).
-
-    Args:
-        annotation: Array of beat timestamps in seconds
-    Returns:
-        Median inter-beat interval in seconds
-    """
-    intervals = np.diff(annotation)
-    intervals = intervals[intervals > 0.3]
-    intervals = intervals[intervals < 1]
-    ibi = np.median(intervals)
-    return float(ibi)
+from .statistics import estimate_ibi
 
 def fill_missing_beats(annotation: np.ndarray, end: float = 0) -> np.ndarray:
     """Add interpolated beats where annotator missed beats.
