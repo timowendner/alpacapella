@@ -128,7 +128,7 @@ def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
             result.append(value)
     return np.array(result)
 
-def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05, is_plot: bool = True) -> tuple[np.ndarray, float]:
+def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05, lag: float = 0.0, is_plot: bool = True) -> tuple[np.ndarray, float]:
     """Complete processing pipeline from raw annotations to final merged output.
     
     Steps: load -> fill gaps -> smooth -> vote -> smooth again -> fill -> predict downbeats -> filter silence
@@ -153,6 +153,8 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
 
     result = combine_annotations(annotations, voting_window)
     length = len(result)
+    if length <= 1:
+        result = annotations[0]
     result = fill_missing_beats(result, max(stacked))
     result = apply_smoothing(result, smoothing_size)
     
@@ -167,7 +169,7 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     mask = np.isin(result, filtered_result)
     result = result[mask]
     beat_positions = beat_positions[mask]
-    result = np.maximum(result, 0)
+    result = np.maximum(result, 0) + lag
     result = np.column_stack([result, beat_positions])
 
     real = length / result.shape[0]
