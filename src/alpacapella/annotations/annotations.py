@@ -203,10 +203,7 @@ def create_dataset(
         
         audio_file = os.path.join(subfolder_path, files[0])
         
-        try:
-            annotation, real = pipeline(subfolder_path, smoothing_size, voting_window)
-        except:
-            annotation, real = None, 0
+        annotation, real = pipeline(subfolder_path, smoothing_size, voting_window, is_plot=False)
         if real < threshold:
             continue
         dataset_name = os.path.basename(os.path.normpath(dataset_path))
