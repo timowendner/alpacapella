@@ -17,6 +17,8 @@ def estimate_ibi(annotation: np.ndarray) -> float:
     intervals = np.diff(annotation)
     intervals = intervals[intervals > 0.3]
     intervals = intervals[intervals < 1]
+    if len(intervals) == 0:
+        return 0
     ibi = np.median(intervals)
     return float(ibi)
 

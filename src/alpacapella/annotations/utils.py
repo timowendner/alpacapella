@@ -107,6 +107,8 @@ def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[float]:
         target = load(target)
     gt_beats = target[:, 0]
     gt_downbeats = target[target[:, 1] == 1, 0]
+    gt_beats = np.sort(gt_beats)
+    gt_downbeats = np.sort(gt_downbeats)
     
     beats_fscore = mir_eval.beat.f_measure(
         mir_eval.beat.trim_beats(gt_beats),

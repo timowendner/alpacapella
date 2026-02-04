@@ -23,8 +23,11 @@ def fill_missing_beats(annotation: np.ndarray, end: float = 0) -> np.ndarray:
     Returns:
         Extended annotation array with interpolated beats
     """
-    intervals = np.diff(annotation)
     ibi = estimate_ibi(annotation)
+    if ibi == 0:
+        return annotation
+    
+    intervals = np.diff(annotation)
     result = [annotation[0]]
     for i in range(len(intervals)):
         current = annotation[i]
@@ -82,10 +85,12 @@ def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.nda
         Smoothed beat timestamps
     """
     ibi = estimate_ibi(annotation)
-    result = []
+    if ibi == 0:
+        return annotation
     
+    result = []
     for center in annotation:
-        mask = np.abs(annotation - center) < smoothing_size * ibi
+        mask = np.abs(annotation - center) <= smoothing_size * ibi
         candidates = annotation[mask].copy()
         multiple = np.round((center - candidates) / ibi)
         candidates += multiple * ibi
@@ -103,9 +108,9 @@ def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
     Returns:
         Filtered beat timestamps with silence sections removed
     """
-    beat = estimate_ibi(annotation)
-    window = 0.75 * beat
-    
+    ibi = estimate_ibi(annotation)
+    window = 0.75 * ibi
+
     result = []
     for value in annotation:
         distances = np.abs(raw - value)
@@ -137,8 +142,9 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
         annotations.append(annotation)
 
     result = combine_annotations(annotations, voting_window)
+    ibi = estimate_ibi(result)
     length = len(result)
-    if length <= 1:
+    if length <= 1 or ibi == 0:
         result = annotations[0]
     result = fill_missing_beats(result, max(stacked))
     result = apply_smoothing(result, smoothing_size)
@@ -154,7 +160,7 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     mask = np.isin(result, filtered_result)
     result = result[mask]
     beat_positions = beat_positions[mask]
-    result = np.maximum(result, 0) + lag
+    result = np.maximum(result + lag, 0)
     result = np.column_stack([result, beat_positions])
 
     real = length / result.shape[0]
