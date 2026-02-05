@@ -28,6 +28,7 @@ __pycache__/*
 *.egg-info
 *.egg
 MANIFEST
+*.ipynb
 
 # Virtual environments
 venv/

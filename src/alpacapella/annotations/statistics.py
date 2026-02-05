@@ -5,12 +5,11 @@ import os
 from .utils import load
 
 def estimate_ibi(annotation: np.ndarray) -> float:
-    """Estimate inter-beat interval using median of valid intervals.
-    
-    Filters intervals between 0.3-1.0 seconds (60-200 BPM range).
+    """Estimate inter-beat interval using median of valid intervals (60-200 BPM).
 
     Args:
-        annotation: Array of beat timestamps in seconds
+        annotation: Beat timestamps in seconds
+    
     Returns:
         Median inter-beat interval in seconds
     """
@@ -24,6 +23,14 @@ def estimate_ibi(annotation: np.ndarray) -> float:
 
 
 def statistics(folder_path: str):
+    """Collect beat counts, BPMs, and audio lengths from all files in folder.
+
+    Args:
+        folder_path: Directory to search recursively
+    
+    Returns:
+        Lists of beat counts, BPMs, and audio durations
+    """
     beats = []
     bpms = []
     audio_length = []

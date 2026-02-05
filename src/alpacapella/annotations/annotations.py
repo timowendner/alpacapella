@@ -1,9 +1,3 @@
-"""Process and merge multiple beat annotations from music files.
-
-Combines annotations from multiple annotators using voting and smoothing,
-then creates a unified dataset for beat tracking models.
-"""
-
 import os
 import numpy as np
 import librosa
@@ -13,15 +7,14 @@ from .utils import load_folder, plot, save
 from .statistics import estimate_ibi
 
 def fill_missing_beats(annotation: np.ndarray, end: float = 0) -> np.ndarray:
-    """Add interpolated beats where annotator missed beats.
+    """Interpolate missing beats based on tempo and extend to start/end.
     
-    Extends annotation to start (time 0) and end based on estimated tempo.
-
     Args:
-        annotation: Array of beat timestamps in seconds
+        annotation: Beat timestamps in seconds
         end: Latest timestamp to extend to (0 means don't extend end)
+    
     Returns:
-        Extended annotation array with interpolated beats
+        Extended annotation with interpolated beats
     """
     ibi = estimate_ibi(annotation)
     if ibi == 0:
@@ -50,16 +43,14 @@ def fill_missing_beats(annotation: np.ndarray, end: float = 0) -> np.ndarray:
 
 
 def combine_annotations(annotations: list, voting_window: float = 0.05) -> np.ndarray:
-    """Merge annotations by keeping beats where all annotators agree.
+    """Keep only beats where all annotators agree within voting_window.
     
-    Beats are considered the same if within voting_window seconds.
-    Prevents duplicates by filtering beats closer than 0.3 seconds.
-
     Args:
         annotations: List of beat timestamp arrays from different annotators
-        voting_window: Max time difference to consider beats identical (typically 0.03-0.1)
+        voting_window: Max time difference to consider beats identical
+    
     Returns:
-        merged beat timestamps
+        Merged beat timestamps
     """
     n = len(annotations)
     stacked = np.sort(np.hstack(annotations))
@@ -80,11 +71,10 @@ def combine_annotations(annotations: list, voting_window: float = 0.05) -> np.nd
 def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.ndarray:
     """Smooth beat positions using local tempo-adjusted averaging.
     
-    Each beat is adjusted based on nearby beats within smoothing_size intervals.
-
     Args:
-        annotation: Array of beat timestamps in seconds
-        smoothing_size: Window size in multiples of inter-beat interval (typically 2-4)
+        annotation: Beat timestamps in seconds
+        smoothing_size: Window size in multiples of inter-beat interval
+    
     Returns:
         Smoothed beat timestamps
     """
@@ -106,15 +96,14 @@ def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.nda
     return result
 
 def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
-    """Remove beats from silent sections where no annotator marked beats.
+    """Remove beats from sections where no annotator marked beats.
     
-    Keeps beats only if any raw annotation exists within 2 inter-beat intervals.
-
     Args:
-        raw: stacked (unprocessed) annotation arrays
+        raw: Stacked unprocessed annotation arrays
         annotation: Processed beat timestamps to filter
+    
     Returns:
-        Filtered beat timestamps with silence sections removed
+        Filtered beat timestamps
     """
     ibi = estimate_ibi(annotation)
     window = 0.75 * ibi
@@ -125,18 +114,17 @@ def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
     return annotation[mask]
 
 def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05, lag: float = 0.0, is_plot: bool = True) -> tuple[np.ndarray, float]:
-    """Complete processing pipeline from raw annotations to final merged output.
+    """Process raw annotations through fill, smooth, vote, and downbeat prediction.
     
-    Steps: load -> fill gaps -> smooth -> vote -> smooth again -> fill -> predict downbeats -> filter silence
-    Displays plot and prints statistics (interpolation %, BPM).
-
     Args:
         annotation_path: Directory containing annotation .txt files
-        smoothing_size: Smoothing window in multiples of IBI (default 2.2)
-        voting_window: Agreement threshold in seconds (default 0.05)
+        smoothing_size: Smoothing window in multiples of IBI
+        voting_window: Agreement threshold in seconds
+        lag: Time offset to apply to all beats
+        is_plot: Whether to display plot
+    
     Returns:
-        Final merged and processed beat timestamps with downbeat positions,
-        percentage of real annotations (without interpolations)
+        Beat timestamps with downbeat positions, percentage of real annotations
     """
     raw_annotations = load_folder(annotation_path)
     stacked = np.sort(np.hstack(raw_annotations))
@@ -175,14 +163,15 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
         plot(stacked, result, title=title)
     return result, real
 
-def write_dataset(audio_path: str, dataset_path: str, annotation: np.ndarray, file_name: str, cutoff: float = 2.0):
-    """Save audio and annotation to dataset.
-
+def write_sample(audio_path: str, dataset_path: str, annotation: np.ndarray, file_name: str, cutoff: float = 2.0):
+    """Save audio and annotation files to dataset directory.
+    
     Args:
         audio_path: Path to source audio file
         dataset_path: Directory to save dataset files
         annotation: 2D array with timestamps and beat positions
-        cutoff: Seconds of audio to keep after last beat (default 2.0)
+        file_name: Output filename without extension
+        cutoff: Seconds of audio to keep after last beat
     """
     y, sr = librosa.load(audio_path, sr=None)
     end = annotation[-1, 0]
@@ -200,6 +189,16 @@ def create_dataset(
         smoothing_size: float = 2.2, voting_window: float = 0.05, 
         cutoff: float = 2.0, threshold: float = 0.4
     ):
+    """Process all annotations and create dataset with audio files.
+    
+    Args:
+        dataset_path: Output directory for dataset
+        annotation_path: Directory containing annotation subfolders
+        smoothing_size: Smoothing window in multiples of IBI
+        voting_window: Agreement threshold in seconds
+        cutoff: Seconds of audio to keep after last beat
+        threshold: Minimum ratio of real annotations to include sample
+    """
     os.makedirs(dataset_path, exist_ok=True)
     folders = os.listdir(annotation_path)
     folders.sort(key=lambda x: (len(x), x))
@@ -220,4 +219,4 @@ def create_dataset(
             continue
         dataset_name = os.path.basename(os.path.normpath(dataset_path))
         name = f"{dataset_name}{subfolder}"
-        write_dataset(audio_file, dataset_path, annotation, name, cutoff)
+        write_sample(audio_file, dataset_path, annotation, name, cutoff)

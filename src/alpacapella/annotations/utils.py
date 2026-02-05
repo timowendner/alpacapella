@@ -5,10 +5,11 @@ import librosa
 import mir_eval
 
 def load(annotation_path: str) -> tuple[np.ndarray]:
-    """Load an annotation file.
+    """Load beat timestamps and downbeat positions from file.
 
     Args:
-        annotation_path: File containing annotations
+        annotation_path: Path to annotation file
+    
     Returns:
         Beat timestamp and downbeat array
     """
@@ -16,23 +17,24 @@ def load(annotation_path: str) -> tuple[np.ndarray]:
     return annotation
 
 def save(annotation: np.ndarray, annotation_path: str):
-    """Save an annotation array to a file.
+    """Save beat timestamps and downbeat positions to file.
 
     Args:
         annotation: Beat timestamp and downbeat array
-        annotation_path: Path where the file will be saved
+        annotation_path: Output file path
     """
     np.savetxt(annotation_path, annotation, fmt=['%.9f', '%d'])
     
 
 
 def load_folder(annotation_path: str) -> list[np.ndarray]:
-    """Load all annotation files from directory.
+    """Load all .txt annotation files from directory.
 
     Args:
         annotation_path: Directory containing annotation files
+    
     Returns:
-        List of beat timestamp arrays, one per file
+        List of beat timestamp arrays
     """
     annotations = []
     for file in sorted(os.listdir(annotation_path)):
@@ -45,14 +47,13 @@ def load_folder(annotation_path: str) -> list[np.ndarray]:
 
 
 def plot(raw: np.ndarray, annotation: np.ndarray, title: str, window_ms: int = 40):
-    """Visualize raw and final beat annotations.
-    
-    Blue lines: all input beats, Red lines: downbeats, Orange lines: other beats.
+    """Plot raw vs final beat annotations with time windows.
 
     Args:
         raw: Combined timestamps from all raw annotations
         annotation: 2D array with timestamps and beat positions
-        title: the title of the plot
+        title: Plot title
+        window_ms: Window size in milliseconds for visualization
     """
     window_s = window_ms / 1000.0
     half_window = window_s / 2.0
@@ -78,9 +79,7 @@ def plot(raw: np.ndarray, annotation: np.ndarray, title: str, window_ms: int = 4
     plt.show()
 
 def play(audio_path: str, annotation: np.ndarray):
-    """Play audio with beat click overlay in Jupyter notebook.
-    
-    Requires IPython environment. Will not work in standard Python scripts.
+    """Play audio with beat clicks in Jupyter notebook.
 
     Args:
         audio_path: Path to audio file
@@ -103,6 +102,16 @@ def play(audio_path: str, annotation: np.ndarray):
 
 
 def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[float]:
+    """Compute F-scores for beat and downbeat predictions.
+
+    Args:
+        beats: Predicted beat timestamps
+        downbeats: Predicted downbeat timestamps
+        target: Path to ground truth file or annotation array
+    
+    Returns:
+        Beat F-score and downbeat F-score
+    """
     if isinstance(target, str):
         target = load(target)
     gt_beats = target[:, 0]
