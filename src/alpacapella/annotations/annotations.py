@@ -63,15 +63,19 @@ def combine_annotations(annotations: list, voting_window: float = 0.05) -> np.nd
     """
     n = len(annotations)
     stacked = np.sort(np.hstack(annotations))
-    result = []
-    for i, value in enumerate(stacked[:-n+1]):
-        candidate = stacked[i+n-1]
-        mean = np.mean(stacked[i:i+n-1])
-        if result and result[-1] + 0.3 > mean:
-            continue
-        if candidate - value < voting_window:
-            result.append(mean)
-    return np.array(result)
+    
+    window = np.lib.stride_tricks.sliding_window_view(stacked, n)
+    ranges = window[:, n-1] - window[:, 0]
+    candidates_mask = ranges < voting_window
+    
+    means = np.mean(window[:, :n], axis=1)
+    
+    valid = []
+    for i in range(len(means)):
+        if candidates_mask[i] and (not valid or valid[-1] + 0.3 <= means[i]):
+            valid.append(means[i])
+    
+    return np.array(valid)
 
 def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.ndarray:
     """Smooth beat positions using local tempo-adjusted averaging.
@@ -88,14 +92,18 @@ def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.nda
     if ibi == 0:
         return annotation
     
-    result = []
-    for center in annotation:
-        mask = np.abs(annotation - center) <= smoothing_size * ibi
-        candidates = annotation[mask].copy()
-        multiple = np.round((center - candidates) / ibi)
-        candidates += multiple * ibi
-        result.append(np.mean(candidates))
-    return np.array(result)
+    n = int(np.ceil(smoothing_size))
+    padded = np.pad(annotation, n, mode='constant', constant_values=-10**6)
+    window = np.lib.stride_tricks.sliding_window_view(padded, n*2 + 1)
+    
+    center = annotation[:, None]
+    mask = np.abs(window - center) <= smoothing_size * ibi
+    multiple = np.round((center - window) / ibi)
+    adjusted = window + multiple * ibi
+    
+    masked_values = np.where(mask, adjusted, np.nan)
+    result = np.nanmean(masked_values, axis=1)
+    return result
 
 def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
     """Remove beats from silent sections where no annotator marked beats.
@@ -111,12 +119,10 @@ def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
     ibi = estimate_ibi(annotation)
     window = 0.75 * ibi
 
-    result = []
-    for value in annotation:
-        distances = np.abs(raw - value)
-        if np.any(distances < window):
-            result.append(value)
-    return np.array(result)
+    distances = np.abs(raw[:, None] - annotation)
+    mask = np.any(distances < window, axis=0)
+    
+    return annotation[mask]
 
 def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05, lag: float = 0.0, is_plot: bool = True) -> tuple[np.ndarray, float]:
     """Complete processing pipeline from raw annotations to final merged output.
@@ -164,8 +170,8 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     result = np.column_stack([result, beat_positions])
 
     real = length / result.shape[0]
-    title = f"real: {real * 100:.2f}%, bpm: {bpm:.2f}"
     if is_plot:
+        title = f"real: {real * 100:.2f}%, bpm: {bpm:.2f}"
         plot(stacked, result, title=title)
     return result, real
 
