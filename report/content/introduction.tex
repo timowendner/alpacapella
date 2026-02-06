@@ -1,0 +1,17 @@
+\section{Introduction}
+A beat is the basic rhythmic pulse in music. In rap, this pulse is crucial because rap vocals are rhythmic speech delivered over an instrumental, where rhythm takes precedence over melody. Beats are organized in groups called measures, where the first beat in a measure is called the downbeat. Most beat tracking research focuses on diverse music genres, but rap remains underrepresented. Even less common is research on acapellas, which are vocals without an instrumental.
+
+Accurate beat tracking is vital for music information retrieval (MIR). Tasks like automatic remixing or generating instrumentation for rap acapellas \cite{joshi2025rap} rely heavily on the precision of beat trackers.
+
+At first glance, this task seems easy because most rap instrumentals use looped samples and drum machines, which keep the tempo constant. This tempo is measured in beats per minute (BPM), while the time difference between beats is called the inter beat interval (IBI).
+
+However, several factors make beat tracking for rap acapellas significantly harder than for standard music. Traditional models use onsets (sharp increases in volume) from drums or percussion, which are missing from vocals. The timing of rap vocals varies drastically, as they might lag behind or rush ahead of the beat, or use triplets and off-beat patterns. The recording quality differs widely, from heavily processed tracks with compression artifacts to clean recordings.
+
+Despite advances in beat tracking, existing models have not been evaluated on rap acapellas. This work analyzes whether current state-of-the-art models can detect beats in rap acapellas. The tested models include Beat This \cite{foscarin2024beatthis} and Madmom \cite{boeck2016madmom}. F1, CMLt, and AMLt are used to evaluate the models. F1 scores check for accuracy, while CMLt and AMLt show if the model stays on track with the tempo.
+
+The main contributions of this paper are:
+\begin{enumerate}
+    \item The introduction of a new dataset consisting of 109 manually annotated rap acapellas from Looperman\cite{looperman}.
+    \item An evaluation baseline for existing models on rap acapellas.
+    \item An analysis of limiting factors, such as annotation lag and downbeat ambiguity.
+\end{enumerate}
