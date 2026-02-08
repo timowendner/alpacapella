@@ -114,3 +114,4 @@ report/*.synctex.gz
 /main-*.pdf
 /report/jku-templates-report-latex-master/*
 /report/out/*
+*.png
