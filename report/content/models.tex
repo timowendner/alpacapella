@@ -1,0 +1,22 @@
+\section{Models}
+\subsection{madmom}
+The madmom~\cite{bock2016a} library is a framework that provides different deep learning models for music retrieval tasks.
+The rnn based beat tracking model~\cite{bock2016b} uses multiple mel-spectrogram representations as input to a bidirectional LSTM\cite{hochreiter1997}, postprocessed by a dynamic Bayesian Network (DBN).
+
+The raw audio is split into overlapping frames with a \(10ms\) hop size. Each frame is weighted by a hann window before computing the The Short-time Fourier Transform (STFT). The magnitude of the STFT produces the spectrogram. Three spectrograms are computed using window sizes of 1024, 2048, and 4096 samples. The frequency ranges are limited to \([30, 17000]\) Hz. Logarithmically spaced filters with 3, 6, and 12 bands per octave (corresponding to the three window sizes) are applied to reduce the frequency dimension to a total of 157 bands. The filter outputs are combined with their first order differences, to capture temporal information, resulting in 314 features.
+
+The features are interpreted by a bidirectional Long Short Term memory (BLSTM). Each layer contains a forward and a backward LSTM, that process the sequence in opposite directions. The network has 3 layers, each with output size of \(25 \times 2\). The final layer consists of a softmax activated linear layer of size 3, predicting the \textit{beat} \(b_k\), \textit{downbeat} \(d_k\), and \textit{non-beat} \(n_k\) classes at each frame \(k\). It consists of around 100k parameters.
+
+
+The DBN processes the frame predictions, to compute the most likely beat positions. It assigns a discrete state \(s_k\) to every frame, with hidden parameters \textit{bar position} (frames since last downbeat), \textit{tempo} (60 possible BPM logarithmically spaced values), and \textit{time signature} (locked at 4/4). Every frame, the bar position is incremented, until a downbeat position is reached. The tempo and time signature determine the possible downbeat positions \(\mathcal{D}\) and beat positions \(\mathcal{B}\). Tempo transitions can only occur on beat positions and prefer smooth tempo changes over sudden jumps. The observation likelihood \(p(o_k | s_k)\) represents how well the BLSTM output \(o_k = (b_k, d_k, n_k)\) matches the state \(s_k\)
+\[ p(o_k | s_k) = \begin{cases} d_k &\text{ if } s_k \in \mathcal{D}\\ b_k &\text{ if } s_k \in \mathcal{B}\\ \frac{n_k}{15} &\text{ else} \end{cases} \]
+The DBN assigns a state to every frame, such that the likelihood of the total sequence \([1:K]\) is maximized, considering the transitions and activations from the BLSTM.
+\[ s^*_{1:K} = \arg \max_{s_{1:K}} p(s_{1:K} | o_{1:K}) \]
+The Viterbi algorithm finds the states that best fits the network predictions and transitions. The final sequence of beats and downbeats, are given by the frames that were assigned to beat-downbeat states.
+\[ \mathbf{B} = \{k: s^*_k \in \mathcal{B}\} \qquad\qquad \mathbf{D} = \{k: s^*_k \in \mathcal{D}\} \]
+Finally the chosen positions are shifted to the highest activations within a small window.
+
+\subsection{Beat This}
+The beat this \cite{foscarin2024} model, leverages transformers \cite{vaswani2017} to achieve state of the art performance. The authors argue that the DBN relies on rigid musical assumptions, that do not apply to every song. Beat this replaces the DBN with minimal postprocessing.
+
+The model takes 30s parts of the audio sampled at 22.05 Hz and converts them into a 128-band Mel Spectrogram limited to \([30, 10000]\) Hz. 
