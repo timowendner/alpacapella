@@ -1,12 +1,16 @@
 import numpy as np
+from madmom.audio.signal import Signal
 from madmom.features.downbeats import RNNDownBeatProcessor, DBNDownBeatTrackingProcessor
 from .. import annotations
 
-def predict(audio_path: str):
-    rnn_processor = RNNDownBeatProcessor()
-    dbn_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[4, 8], fps=100)
+def predict(audio: str | np.ndarray, sr: int = 44100):
+    if not isinstance(audio, str) and sr != 44100:
+        audio = Signal(audio, sample_rate=sr)
 
-    activations = rnn_processor(audio_path)
+    rnn_processor = RNNDownBeatProcessor()
+    dbn_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[4], min_bpm=60, max_bpm=200, fps=100)
+
+    activations = rnn_processor(audio)
     beat_downbeat_positions = dbn_processor(activations)
 
     beats = beat_downbeat_positions[:, 0]
@@ -15,8 +19,8 @@ def predict(audio_path: str):
 
     return beats, downbeats
 
-def evaluate(audio_path, annotation: str | np.ndarray):
-    beats, downbeats = predict(audio_path)
+def evaluate(audio: str | np.ndarray, annotation: str | np.ndarray):
+    beats, downbeats = predict(audio)
 
     beats_fscore, downbeats_fscore = annotations.evaluate(
         beats, downbeats, annotation

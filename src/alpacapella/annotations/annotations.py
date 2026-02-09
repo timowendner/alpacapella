@@ -187,7 +187,9 @@ def write_sample(audio_path: str, dataset_path: str, annotation: np.ndarray, fil
 def create_dataset(
         dataset_path: str, annotation_path: str,
         smoothing_size: float = 2.2, voting_window: float = 0.05, 
-        cutoff: float = 2.0, threshold: float = 0.4
+        lag: float = 0.037,
+        threshold: float = 0.4,
+        cutoff: float = 2.0, 
     ):
     """Process all annotations and create dataset with audio files.
     
@@ -214,7 +216,7 @@ def create_dataset(
         
         audio_file = os.path.join(subfolder_path, files[0])
         
-        annotation, real = pipeline(subfolder_path, smoothing_size, voting_window, is_plot=False)
+        annotation, real = pipeline(subfolder_path, smoothing_size, voting_window, lag, is_plot=False)
         if real < threshold:
             continue
         dataset_name = os.path.basename(os.path.normpath(dataset_path))
