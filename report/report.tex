@@ -1,6 +1,9 @@
-\documentclass[10pt,twocolumn,letterpaper]{article}
+% \documentclass[10pt,twocolumn,letterpaper]{article}
+% \usepackage[utf8]{inputenc}
+% \usepackage[margin=2cm,top=1.5cm,bottom=2.5cm, columnsep=1cm]{geometry}
+\documentclass[letterpaper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[margin=2cm,top=1.5cm,bottom=2.5cm, columnsep=1cm]{geometry}
+% \usepackage{geometry}
 
 \usepackage[T1]{fontenc}
 \usepackage{times}
@@ -21,10 +24,23 @@
 \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
 
 \usepackage[backend=biber,style=numeric]{biblatex}
+
+\DeclareDatamodelEntrytypes{customref}
+
+\DeclareBibliographyDriver{customref}{%
+  \printfield{usera}%
+  \setunit{\addspace}%
+  \printtext[parens]{\printfield{year}}%
+  \setunit{\addcolon\addspace}%
+  \printfield{title}%
+  \setunit{\addspace\textendash\addspace}%
+  \textit{\printfield{journaltitle}}%
+  \finentry
+}
+
 \addbibresource{references.bib}
 
-
-\title{\textbf{Beat Tracking for Rap Acapellas}}
+\title{\textbf{Beat Tracking for Rap Acapellas} \\ \Large Practical Work}
 
 \author{
   Timo Wendner \\
@@ -35,11 +51,13 @@
 
 \begin{document}
 \maketitle
+% \cite{ellis2007,dixon2007,bello2005,klapuri2006,davies2007,klapuri1999,goto1994,laroche2003,whiteley2006,rabiner1989,papadopoulos2009,bock2016a,bock2011,bock2016b,bock2014,fiocchi2018,song2022,durand2015,krebs2015,davies2019,schreiber2018,foscarin2024,lu2021,hung2022,chang2024,murgul2025,zhao2022,thapa2024,ru2025,zapata2013,heydari2023,deng2024,joshi2025,ning2025,davies2009,davies2014,chiu2022,elman1990,lecun1998,rumelhart1986,vaswani2017,tal2017,cannam2010, looperman}
 
 
 
 \input{content/introduction.tex}
 \input{content/datasets.tex}
+\input{content/models.tex}
 \input{content/discussions.tex}
 
 \printbibliography
