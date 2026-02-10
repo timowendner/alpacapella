@@ -1,0 +1,9 @@
+\section{Evaluation}
+The main evaluation component is the F1 score. The F1 score is the harmonic mean of the Precision and Recall. It is superior over accuracy because it penalizes over-predicting beats. A beat is considered to be a true positive if the prediction is within a window of \(\pm 70 ms\). The window size is a standard in MIR tasks, to account for human perception limits. Each ground truth beat can only be associated with one prediction.
+\[ F1 = 2 \cdot \frac{Precision \cdot Recall}{Precision + Recall} \]
+
+The CMTl (Correct Metrical Level, total) evaluates if the predictions identify the phase and tempo correctly across the entire track. It calculates the continuity by counting the longest continuous subsequence where predictions align with the ground truths (same \(\pm 70 ms\) window as for the F1 score). The score is the ratio of the longest subsequence to the total length of the sequence.
+
+The AMTl (Allowed Metrical Level, total) relaxes the CMTl constraints. It accepts predictions at double or half the speed. As the rap beats sometimes operate on half-time, this aligns well with our goals.
+
+Each Evaluation is computed using the standard \texttt{mir\_eval} package \cite{raffel2014}.
