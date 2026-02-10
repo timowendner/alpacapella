@@ -3,9 +3,9 @@ A beat is the basic rhythmic pulse in music. In rap, this pulse is crucial becau
 
 Accurate beat tracking is vital for music information retrieval (MIR). Downstream tasks like automatic remixing need to align the beats and measures to prevent clashing rhythms. For rap acapella guided music generation\cite{joshi2025} it has been shown that accurate beat information could improve performance.
 
-Initially, this task seems simple because most rap instrumentals use looped samples and drum machines, which keep the tempo, measured in beats per minute (BPM), constant.
+Initially, this task appears simple because most rap instrumentals use looped samples and drum machines, which keep the tempo, measured in beats per minute (BPM), constant.
 
-However, several factors make beat tracking for rap acapellas significantly harder than for standard music. Traditional models use onsets (sharp increases in volume), which are missing from vocals. The timing of rap vocals varies drastically, as they might lag behind, rush ahead, use triplets or off-beat patterns. The recording quality differs widely, from heavily processed tracks with compression artifacts to clean recordings.
+However, several factors make beat tracking for rap acapellas significantly harder than for standard music. Traditional models rely on onsets (sharp increases in volume), which are less distinct in vocals. The timing of rap vocals varies drastically, as they might lag behind, rush ahead, use triplets or off-beat patterns. The recording quality differs widely, from heavily processed tracks with compression artifacts to clean recordings.
 
 Despite advances in beat tracking, existing models have not been evaluated on rap acapellas. This work addresses this gap in research by testing two state-of-the-art models. Beat This\cite{foscarin2024} combines CNNs~\cite{lecun1998} with transformers~\cite{vaswani2017} to capture both local and global temporal information. Madmom\cite{bock2016a} leverage RNNs~\cite{rumelhart1986,elman1990} for beat inference.
 

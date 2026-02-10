@@ -19,7 +19,7 @@ The values have been chosen to make sense in the context of the task. Since the 
     \label{fig:dataset_bpm}
 \end{figure}
 
-The last important parameter for the annotation dataset is the \textit{lag}. The normal process of annotation relies heavily on the onsets of drums or percussions. Since this is not really reliable for the acapellas, there could be a possible lag. This lag can be introduced in form of latency issues with the computer, as well as human error. To counter this lag, the annotations are just shifted by a few milliseconds. The score peaks at around \(0.033\) (\(33ms\)) behind the predictions. That means that the manual annotations are slightly earlier than predicted, meaning that the annotator has anticipated the beat. We can clearly see that the with a shift of around \(0.4\) other peaks form, likely because the beats switch position with the next, or previous ones.
+The last important parameter for the annotation dataset is the \textit{lag}. The standard annotation process relies heavily on drums or percussions onsets. Since this is not really reliable for the acapellas, there could be a possible lag. This lag can be introduced in form of latency issues with the computer, as well as human error. To counter this lag, the annotations are just shifted by a few milliseconds. The score peaks at around \(0.033\) (\(33ms\)) behind the predictions. That indicates that manual annotations are slightly earlier than predicted, suggesting that the annotator has anticipated the beat. We can clearly see that the with a shift of around \(0.4\) other peaks form, likely because the beats switch position with the next, or previous ones.
 
 \begin{figure}[h!]
     \centering
