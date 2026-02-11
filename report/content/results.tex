@@ -1,5 +1,5 @@
 \section{Results}
-Both models are tested on the whole looperman dataset. Since the tempo is constant, and the beat this model could benefit from the DBN, it is also included. We see that the DBN improves the scores drastically for the CMLt and AMLt evaluation, but loses performance for the F1 score. The madmom library performs slightly better than beat this and is the best model of the tested ones. Eventhough the onsets are not really useful, both models are able to predict reasonable values for the beats. The Downbeats are lacking for every tested model. 
+Both models are tested on the whole Looperman dataset. Since the tempo is constant, and the beat this model could benefit from the DBN, it is also included. We see that the DBN improves the scores drastically for the CMLt and AMLt evaluation, but loses performance for the F1 score. The madmom library performs slightly better than beat this and is the best model of the tested ones. Even though the onsets are not really useful, both models are able to predict reasonable values for the beats. The downbeats seem to be a harder task. Both models struggle with the downbeats.
 
 \begin{table}[h!]
 \centering
@@ -10,15 +10,15 @@ Both models are tested on the whole looperman dataset. Since the tempo is consta
 \cmidrule(lr){2-4} \cmidrule(lr){5-7}
 & F1 & CMLt & AMLt & F1 & CMLt & AMLt \\
 \midrule
-madmom & \textbf{0.852} & \textbf{0.819} & \textbf{0.877} & \textbf{0.704} & \textbf{0.655} & \textbf{0.721} \\
+madmom & \textbf{0.655} & \textbf{0.530} & \textbf{0.690} & \textbf{0.148} & 0.096 & \textbf{0.350} \\
 Beat this & 0.612 & 0.375 & 0.441 & 0.141 & 0.032 & 0.113 \\
-- with DBN & 0.589 & 0.451 & 0.585 & 0.129 & 0.155 & 0.342 \\
+- with DBN & 0.589 & 0.451 & 0.585 & 0.129 & \textbf{0.155} & 0.342 \\
 \bottomrule
 \end{tabular}
-\caption{Performance comparison of models on the looperman dataset.}
+\caption{Performance comparison of models on the Looperman dataset.}
 \end{table}
 
-To assess the dataset further the dataset was split into slow beats (\(< 110 \) bpm), medium beats (\(110 \text{ - } 140\) bpm) and fast beats (\(> 140\) beats). We can see that the slower beats are much harder to predict. It has been observed in the annotation process, as well as the filtering step that fast beats are simpler for the beat prediction task. One shortcoming is the standard assumption 
+To assess the dataset further the dataset was split into slow beats (\(< 110 \) bpm), medium beats (\(110 \text{ - } 140\) bpm) and fast beats (\(> 140\) bpm). We can see that the slower beats are much harder to predict. It has been observed in the annotation process, as well as the filtering step that fast beats are simpler for the beat prediction task. One shortcoming is the standard evaluation with the \(\pm 70ms\) window, which favors faster beats.
 
 \begin{table}[h!]
 \centering
@@ -31,7 +31,7 @@ To assess the dataset further the dataset was split into slow beats (\(< 110 \) 
 \midrule
 slow (\(< 110 \) bpm) & 0.852 & 0.819 & 0.877 & 0.704 & 0.655 & 0.721 \\
 medium (\(110 \text{ - } 140\) bpm) & \textbf{0.891} & \textbf{0.864} & \textbf{0.912} & \textbf{0.758} & \textbf{0.712} & \textbf{0.785} \\
-fast (\(> 140\) beats) & 0.824 & 0.791 & 0.843 & 0.681 & 0.627 & 0.704 \\
+fast (\(> 140\) bpm) & 0.824 & 0.791 & 0.843 & 0.681 & 0.627 & 0.704 \\
 \bottomrule
 \end{tabular}
 \caption{Performance comparison of bpm ranges.}

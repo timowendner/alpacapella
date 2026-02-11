@@ -1,7 +1,6 @@
-\section{Discussions}
-The evaluation of beat tracking for rap acapellas reveals several challenges, stemming from the nature of the vocal performances and the manual annotation process.
+\section{Discussion}
 \subsection{Annotation Challenges and Pipeline Validation}
-The uploads on Looperman consisted of amateur rappers, leading to amateur quality of many recordings. Tempo inconsistencies and timing fluctuations were observed. Sometimes rappers intentionally deviate from the beat to make the track and flow more interesting. This leads to unreliable onset information, as well as a challenging annotation process. The absence of clear onset information made precise beat placement difficult. The absence of drums caused the visual feedback from the waveforms to be unreliable. Human error on the annotator's side contributed additional timing inaccuracies. Silent sections without vocal information caused uncertainties.
+The uploads on Looperman consisted of amateur rappers, leading to amateur quality of many recordings. Tempo inconsistencies and timing fluctuations were observed. Sometimes rappers intentionally deviate from the beat to make the track and flow more interesting. The absence of clear onset information made precise beat placement difficult. The absence of drums caused the visual feedback from the waveforms to be unreliable. Human error on the annotator's side contributed additional timing inaccuracies. Silent sections without vocal information caused uncertainties.
 
 The annotation pipeline performance depends on several parameter choices. The \textit{smoothing size} controls the influence distance of annotations. We observed no significant changes and the optimal value appears around \(1.5\). The \textit{voting window} and \textit{threshold} jointly filter the dataset. Individual values matter less than the resulting dataset size. Less filtered datasets generally produce worse performance. A \textit{voting window} below \(0.07\) performs slightly worse, while larger values show minimal change.
 
@@ -11,7 +10,7 @@ The annotation pipeline performance depends on several parameter choices. The \t
     \label{fig:dataset_topk}
 \end{figure}
 
-The values have been chosen to make sense in the context of the task. Since the evaluation requires the beats to be in a window of \(\pm 70ms\), a \textit{voting window} of \(0.07\) (i.e. \(70ms\)) seems reasonable. Compared with a \textit{threshold} of \(0.5\), this results in a final dataset size of 110, results in a respectable performance as well as a good size of the dataset. The bpm distribution seems to favor more fast tracks, as many slow (< 100 bpm) tracks got filtered out. Note that the sometimes there is a higher number of track in the filtered dataset, which is because some tracks are at exactly 140 bpm, and some annotions will get 139.9 bpm, they then are classified in a different bin.
+The values have been chosen to make sense in the context of the task. Since the evaluation requires the beats to be in a window of \(\pm 70ms\), a \textit{voting window} of \(0.07\) (i.e. \(70ms\)) seems reasonable. Compared with a \textit{threshold} of \(0.5\), this results in a final dataset size of 110, results in a respectable performance as well as a good size of the dataset. The bpm distribution seems to favor more fast tracks, as many slow (< 100 bpm) tracks got filtered out. Note that sometimes there is a higher number of tracks in the filtered dataset, which is because some tracks are at exactly 140 bpm, and some annotations will get 139.9 bpm, they then are classified in a different bin.
 
 \begin{figure}[h!]
     \centering
@@ -19,7 +18,7 @@ The values have been chosen to make sense in the context of the task. Since the 
     \label{fig:dataset_bpm}
 \end{figure}
 
-The last important parameter for the annotation dataset is the \textit{lag}. The standard annotation process relies heavily on drums or percussions onsets. Since this is not really reliable for the acapellas, there could be a possible lag. This lag can be introduced in form of latency issues with the computer, as well as human error. To counter this lag, the annotations are just shifted by a few milliseconds. The score peaks at around \(0.033\) (\(33ms\)) behind the predictions. That indicates that manual annotations are slightly earlier than predicted, suggesting that the annotator has anticipated the beat. We can clearly see that the with a shift of around \(0.4\) other peaks form, likely because the beats switch position with the next, or previous ones.
+The last important parameter for the annotation dataset is the \textit{lag}. The standard annotation process relies heavily on drums or percussion onsets. Since this is not really reliable for the acapellas, there could be a possible lag. This lag can be introduced in form of latency issues with the computer, as well as human error. To counter this lag, the annotations are just shifted by a few milliseconds. The score peaks at around \(0.033\) (\(33ms\)) behind the predictions. That indicates that manual annotations are slightly earlier than predicted, suggesting that the annotator has anticipated the beat. We can clearly see that with a shift of around \(0.4\) other peaks form, likely because the beats switch position with the next, or previous ones.
 
 \begin{figure}[h!]
     \centering

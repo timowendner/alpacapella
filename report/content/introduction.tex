@@ -1,5 +1,5 @@
 \section{Introduction}
-A beat is the basic rhythmic pulse in music. In rap, this pulse is crucial because rap vocals are rhythmic speech delivered over an instrumental, where rhythm takes precedence over melody. Beats are organized in groups called measures, where the first beat in each measure is called the downbeat. Most research focuses on diverse music genres, but rap and acapellas remains underrepresented.
+A beat is the basic rhythmic pulse in music. In rap, this pulse is crucial because rap vocals are rhythmic speech delivered over an instrumental, where rhythm takes precedence over melody. Beats are organized in groups called measures, where the first beat in each measure is called the downbeat. Most research focuses on diverse music genres, but rap and acapellas remain underrepresented.
 
 Accurate beat tracking is vital for music information retrieval (MIR). Downstream tasks like automatic remixing need to align the beats and measures to prevent clashing rhythms. For rap acapella guided music generation\cite{joshi2025} it has been shown that accurate beat information could improve performance.
 
@@ -7,7 +7,7 @@ Initially, this task appears simple because most rap instrumentals use looped sa
 
 However, several factors make beat tracking for rap acapellas significantly harder than for standard music. Traditional models rely on onsets (sharp increases in volume), which are less distinct in vocals. The timing of rap vocals varies drastically, as they might lag behind, rush ahead, use triplets or off-beat patterns. The recording quality differs widely, from heavily processed tracks with compression artifacts to clean recordings.
 
-Despite advances in beat tracking, existing models have not been evaluated on rap acapellas. This work addresses this gap in research by testing two state-of-the-art models. Beat This\cite{foscarin2024} combines CNNs~\cite{lecun1998} with transformers~\cite{vaswani2017} to capture both local and global temporal information. Madmom\cite{bock2016a} leverage RNNs~\cite{rumelhart1986,elman1990} for beat inference.
+Despite advances in beat tracking, existing models have not been evaluated on rap acapellas. This work addresses this gap in research by testing two state-of-the-art models. Beat This\cite{foscarin2024} combines CNNs~\cite{lecun1998} with transformers~\cite{vaswani2017} to capture both local and global temporal information. Madmom\cite{bock2016a} leverages RNNs~\cite{rumelhart1986,elman1990} for beat inference.
 
 Evaluation uses three metrics that reveal different aspects of performance. F1 scores measure whether individual beats are detected accurately. CMLt and AMLt assess whether the model locks onto the correct tempo and maintains it consistently.
 
