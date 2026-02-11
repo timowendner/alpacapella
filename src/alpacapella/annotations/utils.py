@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import librosa
 import mir_eval
 
-def load(annotation_path: str) -> tuple[np.ndarray]:
+def load(annotation_path: str) -> np.ndarray:
     """Load beat timestamps and downbeat positions from file.
 
     Args:
@@ -27,23 +27,25 @@ def save(annotation: np.ndarray, annotation_path: str):
     
 
 
-def load_folder(annotation_path: str) -> list[np.ndarray]:
+def load_folder(annotation_path: str) -> tuple[np.ndarray]:
     """Load all .txt annotation files from directory.
 
     Args:
         annotation_path: Directory containing annotation files
     
     Returns:
-        List of beat timestamp arrays
+        List of beat and measure timestamp arrays
     """
     annotations = []
+    measure = []
     for file in sorted(os.listdir(annotation_path)):
         if not file.endswith('.txt') or file.endswith('.beats'):
             continue
         file_path = os.path.join(annotation_path, file)
-        annotation = load(file_path)[:, 0]
-        annotations.append(annotation)
-    return annotations
+        annotation = load(file_path)
+        annotations.append(np.sort(annotation[:, 0]))
+        measure.append(annotation[:, 1])
+    return annotations, measure
 
 
 def plot(raw: np.ndarray, annotation: np.ndarray, title: str, window_ms: int = 40):
@@ -101,34 +103,36 @@ def play(audio_path: str, annotation: np.ndarray):
     display(Audio(y + downbeat_clicks + other_clicks, rate=sr))
 
 
-def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[float]:
-    """Compute F-scores for beat and downbeat predictions.
-
-    Args:
-        beats: Predicted beat timestamps
-        downbeats: Predicted downbeat timestamps
-        target: Path to ground truth file or annotation array
-    
-    Returns:
-        Beat F-score and downbeat F-score
-    """
+def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[dict[str, float], dict[str, float]]:
     if isinstance(target, str):
         target = load(target)
+    
     gt_beats = target[:, 0]
     gt_downbeats = target[target[:, 1] == 1, 0]
-    gt_beats = np.sort(gt_beats)
-    gt_downbeats = np.sort(gt_downbeats)
     
-    beats_fscore = mir_eval.beat.f_measure(
-        mir_eval.beat.trim_beats(gt_beats),
-        mir_eval.beat.trim_beats(beats),
-        0.07
-    )
+    beats = mir_eval.beat.trim_beats(beats)
+    gt_beats = mir_eval.beat.trim_beats(gt_beats)
+
+    f1score = mir_eval.beat.f_measure(gt_beats, beats, 0.07)
+    CMLc, CMLt, AMLc, AMLt = mir_eval.beat.continuity(gt_beats, beats)
+
+    beats_metrics = {
+        "f1": f1score,
+        "cmlt": CMLt,
+        "amlt": AMLt
+    }
+
+    gt_downbeats = mir_eval.beat.trim_beats(gt_downbeats)
+    downbeats = mir_eval.beat.trim_beats(downbeats)
     
-    downbeats_fscore = mir_eval.beat.f_measure(
-        mir_eval.beat.trim_beats(gt_downbeats),
-        mir_eval.beat.trim_beats(downbeats),
-        0.07
-    )
+    f1score = mir_eval.beat.f_measure(gt_downbeats, downbeats, 0.07)
+    CMLc, CMLt, AMLc, AMLt = mir_eval.beat.continuity(gt_downbeats, downbeats)
     
-    return beats_fscore, downbeats_fscore
+    
+    downbeats_metrics = {
+        "f1": f1score,
+        "cmlt": CMLt,
+        "amlt": AMLt
+    }
+    
+    return beats_metrics, downbeats_metrics

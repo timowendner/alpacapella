@@ -2,13 +2,13 @@ from beat_this.inference import File2Beats, Audio2Beats
 import numpy as np
 from .. import annotations
 
-def predict(audio: str | np.ndarray, sr=None, device: str = "cpu"):
+def predict(audio: str | np.ndarray, sr=None, device: str = "cpu", dbn: bool = False):
     checkpoint_path = "final0"
     if isinstance(audio, np.ndarray):
-        model = Audio2Beats(checkpoint_path, device, dbn=False)
+        model = Audio2Beats(checkpoint_path, device, dbn=dbn)
         beats, downbeats = model(audio, sr)
     else:
-        model = File2Beats(checkpoint_path, device, dbn=False)
+        model = File2Beats(checkpoint_path, device, dbn=dbn)
         beats, downbeats = model(audio)
     return beats, downbeats
 

@@ -126,8 +126,8 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     Returns:
         Beat timestamps with downbeat positions, percentage of real annotations
     """
-    raw_annotations = load_folder(annotation_path)
-    stacked = np.sort(np.hstack(raw_annotations))
+    raw_annotations, raw_measures = load_folder(annotation_path)
+    stacked = np.hstack(raw_annotations)
     annotations = []
     for annotation in raw_annotations:
         annotation = fill_missing_beats(annotation)
@@ -145,9 +145,10 @@ def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: f
     
     ibi = estimate_ibi(result)
     bpm = 60 / ibi
-    beats_in_bar = 4 if bpm < 110 else 8
+    beats_in_bar = 4
     
-    first_beat_index = int(round(result[0] / ibi))
+    offset = (raw_measures[0][0] - np.round(raw_annotations[0][0] / ibi) - 1) % beats_in_bar
+    first_beat_index = int(round(result[0] / ibi) + offset)
     beat_positions = ((first_beat_index + np.arange(len(result))) % beats_in_bar) + 1
     
     filtered_result = filter_silence(stacked, result)
