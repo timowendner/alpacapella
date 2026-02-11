@@ -1,8 +1,8 @@
 \section{Conclusion}
-This research investigates whether existing beat tracking algorithms can predict beats on rap acapella. While the absence of clear onsets and the rhythmic complexity of rap present challenges, the results demonstrate that the current state of the art models can predict beats for rap acapellas.
+This research investigates whether existing beat tracking algorithms can predict beats on rap acapella. While the absence of clear onsets and the rhythmic complexity of rap present challenges, the results demonstrate that the current state of the art models can predict beats for rap acapellas, and to a lesser extent also the downbeats.
 
-The madmom library emerges as the most effective model, outperforming the beat this model across multiple benchmarks. The inclusion of the Dynamic Bayesian Network (DBN) resulted in an increase of the CMLt and AMLt evaluations, while decreasing the F1 score. Analysis of the tempo revealed that slower beats are harder to predict.
+The madmom library emerges as the most effective model, outperforming the beat this model across multiple benchmarks. The beat this model was surprisingly better at the estimation of downbeats. The inclusion of the Dynamic Bayesian Network (DBN) resulted in an increase of the CMLt and AMLt evaluations, while decreasing the F1 score. Analysis of the tempo revealed that slower beats are harder to predict.
 
 The study introduced a new dataset with 110 manually annotated rap acapellas. The annotation pipeline proved vital for the creation.
 
-Future work should focus on fine-tuning the models, to improve the capabilities. The downbeats have to be examined further, since the downbeats did not get predicted well.
+Future work should focus on fine-tuning the models, to improve the capabilities. The downbeats have to be examined further, since the downbeats presented the biggest challenge. An analysis of compression and soft-clipping could further improve the results of the models.

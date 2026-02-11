@@ -1,27 +1,31 @@
 \section{Discussion}
 \subsection{Annotation Challenges and Pipeline Validation}
-The uploads on Looperman consisted of amateur rappers, leading to amateur quality of many recordings. Tempo inconsistencies and timing fluctuations were observed. Sometimes rappers intentionally deviate from the beat to make the track and flow more interesting. The absence of clear onset information made precise beat placement difficult. The absence of drums caused the visual feedback from the waveforms to be unreliable. Human error on the annotator's side contributed additional timing inaccuracies. Silent sections without vocal information caused uncertainties.
+The uploads on Looperman include mainly amateur rappers, often reflected in poor quality of the recordings. Tempo inconsistencies and timing fluctuations were observed. The absence of clear onset information made precise beat placement difficult. Human error on the annotator's side contributed additional timing inaccuracies. Silent sections without vocal information caused uncertainties. The annotation pipeline alleviates some of those problems, but is dependent on parameter choices.
 
-The annotation pipeline performance depends on several parameter choices. The \textit{smoothing size} controls the influence distance of annotations. We observed no significant changes and the optimal value appears around \(1.5\). The \textit{voting window} and \textit{threshold} jointly filter the dataset. Individual values matter less than the resulting dataset size. Less filtered datasets generally produce worse performance. A \textit{voting window} below \(0.07\) performs slightly worse, while larger values show minimal change.
+The \textit{smoothing size} controls the influence distance of annotations. We observed no significant changes and the optimal value appears around \(1.5\). The \textit{voting window} and \textit{threshold} jointly filter the dataset. Individual values matter less than the resulting dataset size. Less filtered datasets generally produce worse performance as seen in Figure~\ref{fig:dataset_topk}. A \textit{voting window} below \(0.07\) performs slightly worse, while larger values show minimal change.
+The final dataset size of 110 samples has been produced with a \textit{voting window} of \(0.07\) and a \textit{threshold} of \(0.5\). 
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.7\textwidth]{img/dataset_topk.png}
+    \caption{Comparison of voting windows, showing cumulative mean F1 score across different voting window sizes (40ms, 70ms, 140ms) as the dataset is filtered. The vertical dashed line indicates the final dataset cutoff at 110 samples.}
     \label{fig:dataset_topk}
 \end{figure}
 
-The values have been chosen to make sense in the context of the task. Since the evaluation requires the beats to be in a window of \(\pm 70ms\), a \textit{voting window} of \(0.07\) (i.e. \(70ms\)) seems reasonable. Compared with a \textit{threshold} of \(0.5\), this results in a final dataset size of 110, results in a respectable performance as well as a good size of the dataset. The bpm distribution seems to favor more fast tracks, as many slow (< 100 bpm) tracks got filtered out. Note that sometimes there is a higher number of tracks in the filtered dataset, which is because some tracks are at exactly 140 bpm, and some annotations will get 139.9 bpm, they then are classified in a different bin.
+The bpm distribution in Figure~\ref{fig:dataset_bpm} favors faster beats. Observations at the annotation process suggested slower beats were harder to annotate. The slower beats had much more room to experiment with different rhythms. Since the \textit{voting window} is a fixed value, faster beats have more relative room for error. But since the standard MIR evaluation uses a fixed (\(\pm 70ms\)) tolerance, the \textit{voting window} stays fixed to align with this convention.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.7\textwidth]{img/dataset_bpm.png}
+    \caption{Tempo Distribution for Raw and Filtered Looperman Dataset. The comparison shows a trend of higher acceptance for faster beats. Although filtering reduces the total dataset size, individual bins can appear larger, because small tempo variations (e.g. 139.9 vs. 140 bpm) can cause the annotations to shift across boundaries.}
     \label{fig:dataset_bpm}
 \end{figure}
 
-The last important parameter for the annotation dataset is the \textit{lag}. The standard annotation process relies heavily on drums or percussion onsets. Since this is not really reliable for the acapellas, there could be a possible lag. This lag can be introduced in form of latency issues with the computer, as well as human error. To counter this lag, the annotations are just shifted by a few milliseconds. The score peaks at around \(0.033\) (\(33ms\)) behind the predictions. That indicates that manual annotations are slightly earlier than predicted, suggesting that the annotator has anticipated the beat. We can clearly see that with a shift of around \(0.4\) other peaks form, likely because the beats switch position with the next, or previous ones.
+The last important parameter is the \textit{lag}. The standard annotation process relies heavily on onsets to manually place the beats. Since this is not reliable for acapellas, a possible lag is not out of question. This lag can be introduced in form of computer latency issues, or human bias and anticipation. To counter this lag, the annotations were shifted by \(33ms\).
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.7\textwidth]{img/dataset_lag.png}
+    \caption{Performance over shifted annotations to account for lag. The highest peak appears at \(33ms\), indicating a small annotation bias. Two other peaks appear at \(\pm 400ms\), reflecting the periodicity where annotations align with neighboring beats.}
     \label{fig:dataset_lag}
 \end{figure}

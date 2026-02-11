@@ -1,5 +1,5 @@
 \section{Results}
-Both models are tested on the whole Looperman dataset. Since the tempo is constant, and the beat this model could benefit from the DBN, it is also included. We see that the DBN improves the scores drastically for the CMLt and AMLt evaluation, but loses performance for the F1 score. The madmom library performs slightly better than beat this and is the best model of the tested ones. Even though the onsets are not really useful, both models are able to predict reasonable values for the beats. The downbeats seem to be a harder task. Both models struggle with the downbeats.
+Both models are tested on the whole Looperman dataset in Table~\ref{tab:results_models}. The DBN for the beat this model improves the CMLt and AMLt evaluation, but loses performance on the F1 score. The madmom library performs slightly better than beat this and is the best model of the tested ones. Even without clear onsets, the models are able to predict reasonable values for beats. The downbeats seem to be a harder task, as both models struggle with them.
 
 \begin{table}[h!]
 \centering
@@ -10,29 +10,53 @@ Both models are tested on the whole Looperman dataset. Since the tempo is consta
 \cmidrule(lr){2-4} \cmidrule(lr){5-7}
 & F1 & CMLt & AMLt & F1 & CMLt & AMLt \\
 \midrule
-madmom & \textbf{0.655} & \textbf{0.530} & \textbf{0.690} & \textbf{0.148} & 0.096 & \textbf{0.350} \\
-Beat this & 0.612 & 0.375 & 0.441 & 0.141 & 0.032 & 0.113 \\
-- with DBN & 0.589 & 0.451 & 0.585 & 0.129 & \textbf{0.155} & 0.342 \\
+madmom & \textbf{0.655} & \textbf{0.530} & \textbf{0.690} & 0.288 & 0.306 & 0.535 \\
+Beat this & 0.612 & 0.375 & 0.441 & 0.353 & 0.170 & 0.224 \\
+- with DBN & 0.589 & 0.451 & 0.585 & \textbf{0.355} & \textbf{0.396} & \textbf{0.539} \\
 \bottomrule
 \end{tabular}
 \caption{Performance comparison of models on the Looperman dataset.}
+\label{tab:results_models}
 \end{table}
 
-To assess the dataset further the dataset was split into slow beats (\(< 110 \) bpm), medium beats (\(110 \text{ - } 140\) bpm) and fast beats (\(> 140\) bpm). We can see that the slower beats are much harder to predict. It has been observed in the annotation process, as well as the filtering step that fast beats are simpler for the beat prediction task. One shortcoming is the standard evaluation with the \(\pm 70ms\) window, which favors faster beats.
+To assess the dataset further the dataset was split into slow beats (\(< 110 \) bpm), medium beats (\(110 \text{ - } 140\) bpm) and fast beats (\(> 140\) bpm). We can see that slower beats are harder to predict. It has been observed in the annotation process, as well as the filtering step that fast beats are simpler for the beat tracking task. There seems to be a limit to the performance increase, since the medium beats outperform the faster beats slightly. One shortcoming is the standard evaluation with the \(\pm 70ms\) window, which favors faster beats.
 
 \begin{table}[h!]
 \centering
 \small
 \begin{tabular}{l ccc ccc}
 \toprule
-\multirow{2}{*}{\textbf{Method}} & \multicolumn{3}{c}{\textbf{Beat}} & \multicolumn{3}{c}{\textbf{Downbeat}} \\
+\multirow{2}{*}{\textbf{Tempo Range}} & \multicolumn{3}{c}{\textbf{Beat}} & \multicolumn{3}{c}{\textbf{Downbeat}} \\
 \cmidrule(lr){2-4} \cmidrule(lr){5-7}
 & F1 & CMLt & AMLt & F1 & CMLt & AMLt \\
 \midrule
-slow (\(< 110 \) bpm) & 0.852 & 0.819 & 0.877 & 0.704 & 0.655 & 0.721 \\
-medium (\(110 \text{ - } 140\) bpm) & \textbf{0.891} & \textbf{0.864} & \textbf{0.912} & \textbf{0.758} & \textbf{0.712} & \textbf{0.785} \\
-fast (\(> 140\) bpm) & 0.824 & 0.791 & 0.843 & 0.681 & 0.627 & 0.704 \\
+slow ($< 110$ bpm) & 0.539 & 0.331 & 0.375 & 0.319 & 0.130 & 0.174 \\
+medium ($110 \text{ - } 140$ bpm) & \textbf{0.637} & \textbf{0.458} & \textbf{0.485} & \textbf{0.397} & \textbf{0.209} & 0.234 \\
+fast ($> 140$ bpm) & 0.635 & 0.340 & 0.446 & 0.340 & 0.164 & \textbf{0.245} \\
 \bottomrule
 \end{tabular}
-\caption{Performance comparison of bpm ranges.}
+\caption{Performance comparison across different tempo ranges.}
+\label{tab:results_tempo}
+\end{table}
+
+Examinations of the beat this predictions showed the model often stopped detecting beats for passages. Rap acapellas often contain quiet passages, rarely seen in full produced music. An explanation for the detection stop could be that the audio becomes too quiet. To combat this issue, a simple soft-clipping strategy is used. A gain factor with tanh is applied on the raw audio (\(x' = \tanh (\alpha \cdot x)\)). This boosts quiet part of the audio. The performance grew on most benchmarks with the use of soft-clipping.
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{l ccc ccc}
+\toprule
+\multirow{2}{*}{\textbf{Tanh Scale (\(\alpha \))}} & \multicolumn{3}{c}{\textbf{Beat}} & \multicolumn{3}{c}{\textbf{Downbeat}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+& F1 & CMLt & AMLt & F1 & CMLt & AMLt \\
+\midrule
+No tanh & 0.522 & 0.287 & 0.416 & 0.301 & 0.161 & \textbf{0.258} \\
+1    & 0.562 & 0.326 & 0.432 & 0.319 & \textbf{0.177} & 0.255 \\
+2    & 0.593 & 0.351 & \textbf{0.449} & 0.347 & 0.172 & 0.243 \\
+3    & 0.608 & 0.369 & 0.446 & \textbf{0.354} & 0.171 & 0.231 \\
+4    & \textbf{0.612} & \textbf{0.375} & 0.441 & 0.353 & 0.170 & 0.224 \\
+\bottomrule
+\end{tabular}
+\caption{Impact of tanh soft-clipping on model performance.}
+\label{tab:results_clipping}
 \end{table}

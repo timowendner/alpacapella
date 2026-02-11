@@ -1,6 +1,6 @@
 \section{Datasets}
 \subsection{Annotation Dataset}
-The annotation dataset contains royalty-free rap acapellas from Looperman\cite{looperman}. The website hosts a variety of free user-uploaded audio content. Many are available under royalty-free licenses, making this suitable for research purposes. The audio files were downloaded manually. The selection focuses on clear vocal content as well as varying tempo, voice and production, to ensure the diversity of the dataset. Beat annotations were created using Sonic Visualiser~\cite{cannam2010}. Each acapella was analyzed and beats were manually marked at the beat position. The unreliable onset information leads to a challenging annotation process.
+The annotation dataset contains royalty-free rap acapellas from Looperman\cite{looperman}. The website hosts a variety of free user-uploaded audio content, with royalty-free licenses. The audio files were downloaded manually. The selection focuses on clear vocal content as well as varying tempo, voice and production, to ensure the diversity of the dataset. Beat annotations were created using Sonic Visualiser~\cite{cannam2010}. Each beat and downbeat was manually marked. The unreliable onset information leads to a challenging annotation process.
 
 \textbf{Multi-Annotation Pipeline:} To ensure the best possible quality, a processing pipeline was developed to combine multiple annotations. Each audio file was annotated 3 times independently. 
 \begin{itemize}
@@ -12,25 +12,21 @@ The annotation dataset contains royalty-free rap acapellas from Looperman\cite{l
     \item \textit{Final Process:} The voting process creates gaps in the timeline. To solve this the missing beat interpolation is used from before. This grid provides the basis for the downbeat insertion. The annotations fix the first downbeat, and the grid extrapolates for every other downbeat. Finally the possible silence parts are filtered out, based on the raw annotations. If the position is within \(\pm 0.5 \) IBI of a raw annotation, it is kept, but discarded otherwise.
 \end{itemize}
 
-The multi annotation pipeline has a certain percentage of real vs interpolated beats at the end. A beat is considered real if it originated from the consensus in the voting mechanism. This number is useful for the assessment of the annotation quality. The final dataset excludes annotations with fewer than 50\% real beats. Since there are no onsets to check against, every possible lag (computer lag, personal bias) can accumulate. Normally this can be elevated, because the onsets provide a clear visual feedback. Since this is not the case for rap acapellas, the lag is analyzed and shifted 33ms backwards. Both choices are further discussed in the Discussions section.
+The multi annotation pipeline has a certain percentage of real vs interpolated beats at the end. A beat is considered real if it originated from the consensus in the voting mechanism. This number is useful for the assessment of the annotation quality. The final dataset excludes annotations with fewer than 50\% real beats. Without the onset information, a possible lag (computer lag, personal bias) cannot be ruled out. The final annotation are shifted \(33ms\) forwards. Both choices are further explored in the Discussions section.
 
-The final dataset showed high diversity. The quality of the rappers varied significantly, ranging from amateur to semi-professional. The dataset contained multiple languages, including English, German, French, Portuguese. Recording environments varied considerably, with different microphones, recording qualities, some were dry, some used heavy post-processing. Some files contained just an isolated hook or verse, while others included the complete song.
-The beat-detection seemed harder for slower beats, like old-school hip hop tracks, compared to faster, more melodic trap beats. The dataset consists of 110 annotations with accompanying wav files. This dataset is filtered down from 152 files (456 individual annotations). As shown in~\ref{tab:dataset_summary}, the final collection contains over 19,000 manually verified beats and roughly 2.5 hours of audio. The tempo distribution spans over a broad range of styles. The fast categories are featured dominantly, firstly because the modern style tends to faster beats, but also the annotation of the slower beats tends to be less accurate.
+The final dataset showed high diversity. The quality of the rappers varied significantly, ranging from amateur to semi-professional. Different recording qualities, processing steps and languages, including English, German, French, Portuguese have been observed. Some files contained just an isolated hook or verse, while others included the complete song. The dataset is filtered down from 152 files (456 individual annotations) to 110 annotations with accompanying wav files. As shown in Table~\ref{tab:dataset_summary}, the final collection contains over 19,000 manually verified beats and roughly 2.5 hours of audio. The tempo distribution counts 27 slow (\(< 110\) bpm), 35 medium (\(110\) - \(140\) bpm) and 48 fast (\(> 140\) bpm) beats.
 
 \begin{table}[h]
 \centering
-\caption{Dataset Summary and Tempo Distribution}
-\label{tab:dataset_summary}
 \begin{tabular}{lrr}
-\hline
-\textbf{Metric} & \textbf{Raw Dataset} & \textbf{Final Dataset} \\ \hline
-Total Annotations & 456 & 110 \\
-Total Duration (hh:mm:ss) & 04:10:29 & 02:39:50 \\
-Total Annotated Beats & 74,020 & 19,115 \\ \hline
-\textbf{BPM Distribution (Final)} & \textbf{Count} & \textbf{Percentage} \\ \hline
-Slow ($<110$ BPM) & 27 & 24.5\% \\
-Medium (110--140 BPM) & 35 & 31.8\% \\
-Fast ($>140$ BPM) & 48 & 43.7\% \\ \hline
+    \toprule
+    \textbf{Metric} & \textbf{Raw Dataset} & \textbf{Final Dataset} \\ 
+    \midrule
+    Total Annotations & 456 & 110 \\
+    Total Duration (hh:mm:ss) & 04:10:29 & 02:39:50 \\
+    Total Annotated Beats & 74,020 & 19,115 \\ 
+    \bottomrule
 \end{tabular}
+\caption{Dataset Summary and Tempo Distribution.}
+\label{tab:dataset_summary}
 \end{table}
-
