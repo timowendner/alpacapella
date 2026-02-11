@@ -4,6 +4,15 @@ from madmom.features.downbeats import RNNDownBeatProcessor, DBNDownBeatTrackingP
 from .. import annotations
 
 def predict(audio: str | np.ndarray, sr: int = 44100):
+    """Get beat and downbeat predictions based on audio.
+
+    Args:
+        audio: Path to audio file or loaded array of shape (N, 2)
+        sr: The sample rate of the audio file (Only important for loaded arrays)
+    
+    Returns:
+        tuple of predictions for beats and downbeats.
+    """
     if not isinstance(audio, str) and sr != 44100:
         audio = Signal(audio, sample_rate=sr)
 
@@ -20,10 +29,19 @@ def predict(audio: str | np.ndarray, sr: int = 44100):
     return beats, downbeats
 
 def evaluate(audio: str | np.ndarray, annotation: str | np.ndarray):
+    """Evaluate beat and downbeat predictions against ground truth annotations.
+
+    Args:
+        audio: Path to audio file or loaded array of shape (N, 2)
+        target: Path to annotation file or loaded annotation array with shape (N, 2)
+
+    Returns:
+        tuple of beat and downbeat metric (f1, cmlt, amlt).
+    """
     beats, downbeats = predict(audio)
 
-    beats_fscore, downbeats_fscore = annotations.evaluate(
+    beats_score, downbeats_score = annotations.evaluate(
         beats, downbeats, annotation
     )
     
-    return beats_fscore, downbeats_fscore
+    return beats_score, downbeats_score

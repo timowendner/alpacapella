@@ -48,7 +48,7 @@ def load_folder(annotation_path: str) -> tuple[np.ndarray]:
     return annotations, measure
 
 
-def plot(raw: np.ndarray, annotation: np.ndarray, title: str, window_ms: int = 40):
+def plot(raw: np.ndarray, annotation: np.ndarray, title: str, window_ms: int = 70):
     """Plot raw vs final beat annotations with time windows.
 
     Args:
@@ -104,6 +104,16 @@ def play(audio_path: str, annotation: np.ndarray):
 
 
 def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[dict[str, float], dict[str, float]]:
+    """Evaluate beat and downbeat predictions against ground truth annotations.
+
+    Args:
+        beats: Predicted beat timestamps
+        downbeats: Predicted downbeat timestamps
+        target: Path to annotation file or loaded annotation array with shape (N, 2)
+
+    Returns:
+        tuple of beat and downbeat metric (f1, cmlt, amlt).
+    """
     if isinstance(target, str):
         target = load(target)
     

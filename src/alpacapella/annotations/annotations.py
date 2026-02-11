@@ -42,7 +42,7 @@ def fill_missing_beats(annotation: np.ndarray, end: float = 0) -> np.ndarray:
     return np.array(result)
 
 
-def combine_annotations(annotations: list, voting_window: float = 0.05) -> np.ndarray:
+def combine_annotations(annotations: list, voting_window: float = 0.07) -> np.ndarray:
     """Keep only beats where all annotators agree within voting_window.
     
     Args:
@@ -68,7 +68,7 @@ def combine_annotations(annotations: list, voting_window: float = 0.05) -> np.nd
     
     return np.array(valid)
 
-def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 3) -> np.ndarray:
+def apply_smoothing(annotation: np.ndarray, smoothing_size: float = 1.5) -> np.ndarray:
     """Smooth beat positions using local tempo-adjusted averaging.
     
     Args:
@@ -113,7 +113,7 @@ def filter_silence(raw: np.ndarray, annotation: np.ndarray) -> np.ndarray:
     
     return annotation[mask]
 
-def pipeline(annotation_path: str, smoothing_size: float = 2.2, voting_window: float = 0.05, lag: float = 0.0, is_plot: bool = True) -> tuple[np.ndarray, float]:
+def pipeline(annotation_path: str, smoothing_size: float = 1.5, voting_window: float = 0.07, lag: float = 0.0, is_plot: bool = False) -> tuple[np.ndarray, float]:
     """Process raw annotations through fill, smooth, vote, and downbeat prediction.
     
     Args:
@@ -187,9 +187,9 @@ def write_sample(audio_path: str, dataset_path: str, annotation: np.ndarray, fil
 
 def create_dataset(
         dataset_path: str, annotation_path: str,
-        smoothing_size: float = 2.2, voting_window: float = 0.05, 
-        lag: float = 0.037,
-        threshold: float = 0.4,
+        smoothing_size: float = 1.5, voting_window: float = 0.07, 
+        lag: float = 0.0,
+        threshold: float = 0.5,
         cutoff: float = 2.0, 
     ):
     """Process all annotations and create dataset with audio files.
