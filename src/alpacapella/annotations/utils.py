@@ -146,3 +146,42 @@ def evaluate(beats, downbeats, target: str | np.ndarray) -> tuple[dict[str, floa
     }
     
     return beats_metrics, downbeats_metrics
+
+
+def remove_silence(
+        audio: str | np.ndarray,
+        annotation: str | np.ndarray,
+        hop_size: int = 441,
+        dilation_frames: int = 100,
+        erosion_frames: int = 25,
+        sr: int = 44100,
+    ):
+    if isinstance(audio, str):
+        audio, orig_sr = librosa.load(audio, sr=None)
+        if orig_sr != sr:
+            audio = librosa.resample(audio, orig_sr=orig_sr, target_sr=sr)
+    if isinstance(annotation, str):
+        annotation = load(annotation)
+
+    rms = librosa.feature.rms(y=audio, frame_length=hop_size, hop_length=hop_size)[0]
+    threshold = np.percentile(rms[rms > 0], 20)
+    loud = (rms > threshold)
+
+    dilation_frames = 2*dilation_frames + 1
+    erosion_frames = 2*erosion_frames + 1
+    kernel_d = np.ones(dilation_frames)
+    kernel_e = np.ones(erosion_frames)
+
+    dilated = (np.convolve(loud, kernel_d, mode='full') > 0)
+    eroded = (np.convolve(dilated, kernel_e, mode='same') >= erosion_frames)
+    eroded = eroded[dilation_frames // 2: -(dilation_frames // 2)]
+
+    result = []
+    for time, measure in annotation:
+        sample = int(time * sr / hop_size)
+        if not (0 <= sample < len(loud)):
+            continue
+        if not eroded[sample]:
+            continue
+        result.append([time, measure])
+    return np.array(result)
